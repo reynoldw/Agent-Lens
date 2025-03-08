@@ -13,19 +13,24 @@ from src.persona.generator import PersonaGenerator
 from src.interaction.simulator import WebsiteSimulator
 from src.review.generator import ReviewGenerator
 from src.expert.analyzer import ExpertAnalyzer
-from src.api.openai_client import OpenAIClient
+from src.api.ai_client import AIClient
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 
-# Initialize components
-openai_client = OpenAIClient(api_key=os.getenv('OPENAI_API_KEY'))
-persona_generator = PersonaGenerator(openai_client=openai_client)
+# Initialize AI client with available API keys
+ai_client = AIClient(
+    openai_api_key=os.getenv('OPENAI_API_KEY'),
+    anthropic_api_key=os.getenv('ANTHROPIC_API_KEY')
+)
+
+# Initialize components with AI client
+persona_generator = PersonaGenerator(ai_client=ai_client)
 website_simulator = WebsiteSimulator()
-review_generator = ReviewGenerator(openai_client=openai_client)
-expert_analyzer = ExpertAnalyzer(openai_client=openai_client)
+review_generator = ReviewGenerator(ai_client=ai_client)
+expert_analyzer = ExpertAnalyzer(ai_client=ai_client)
 
 # Global progress queue and results dictionary
 progress_queue = Queue()
@@ -74,7 +79,7 @@ def evaluate_website():
             # Test OpenAI API connection
             try:
                 send_progress("Testing OpenAI API connection...", 5)
-                openai_client.test_connection()
+                ai_client.test_connection()
                 send_progress("OpenAI API connection successful", 10)
             except Exception as e:
                 raise ValueError(f"Failed to connect to OpenAI API: {str(e)}")

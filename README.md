@@ -6,7 +6,9 @@
 
 **AgentReviewHub** is an AI-powered platform that evaluates websites through the lens of diverse simulated user personas. By combining advanced AI agents, browser automation, and expert analysis, it provides comprehensive insights into website usability, design, and user experience.
 
-![AgentReviewHub Dashboard](docs/images/dashboard.png)
+## 🤖 AI Model Support
+- OpenAI GPT-4 and GPT-3.5 Models
+- Anthropic Claude 3 Models (Opus, Sonnet, Haiku)
 
 ## 🌟 Key Features
 
