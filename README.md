@@ -24,7 +24,7 @@
 
 - Python 3.8 or higher
 - pip (Python package installer)
-- A valid OpenAI API key
+- A valid OpenAI or Claude API key
 
 ### Installation
 
