@@ -26,7 +26,7 @@
 
 - Python 3.8 or higher
 - pip (Python package installer)
-- A valid OpenAI API key
+- A valid OpenAI or Claude API key
 
 ### Installation
 
@@ -75,15 +75,6 @@
    ```
 
 3. Enter a website URL and the number of personas to generate, then click "Start Evaluation"
-
-## 📊 How It Works
-
-1. **Persona Generation**: The system creates diverse user personas with varying demographics, technical abilities, and preferences
-2. **Website Simulation**: For each persona, the system simulates realistic interactions with the target website
-3. **Review Generation**: AI generates detailed reviews from each persona's perspective
-4. **Expert Analysis**: The system aggregates data from all simulations and reviews to identify patterns and insights
-5. **Report Generation**: A comprehensive report is created with scores, visualizations, and recommendations
-
 ## 🔧 Configuration
 
 You can customize the evaluation process by modifying the following files:
