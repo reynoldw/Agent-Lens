@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce Website Evaluator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800">E-commerce Website Evaluator</h1>
+            <p class="text-gray-600 mt-2">Analyze your e-commerce website using AI-powered personas</p>
+        </header>
+
+        <!-- Evaluation Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8 no-print">
+            <h2 class="text-2xl font-semibold mb-4">Start Evaluation</h2>
+            <form id="evaluationForm" class="space-y-4">
+                <div>
+                    <label for="websiteUrl" class="block text-gray-700 font-medium mb-2">Website URL</label>
+                    <input type="url" id="websiteUrl" name="url" required
+                           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="https://example.com">
+                </div>
+                <div>
+                    <label for="numPersonas" class="block text-gray-700 font-medium mb-2">Number of Personas</label>
+                    <input type="number" id="numPersonas" name="num_personas" required
+                           class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           value="20" min="1" max="50">
+                </div>
+                <button type="submit"
+                        class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Start Evaluation
+                </button>
+            </form>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progress" class="hidden bg-white rounded-lg shadow-md p-6 mb-8 no-print">
+            <h2 class="text-2xl font-semibold mb-4">Evaluation Progress</h2>
+            <div class="space-y-4">
+                <div class="relative pt-1">
+                    <div class="flex mb-2 items-center justify-between">
+                        <div>
+                            <span id="progressMessage" class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
+                                Starting...
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span id="progressPercentage" class="text-xs font-semibold inline-block text-blue-600">
+                                0%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
+                        <div id="progressBar" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
+                             style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Log Section -->
+        <div id="debugLog" class="hidden bg-white rounded-lg shadow-md p-6 mb-8 no-print">
+            <h2 class="text-2xl font-semibold mb-4">Debug Log</h2>
+            <div class="flex justify-between mb-4">
+                <h3 class="text-lg font-medium">Detailed Execution Log</h3>
+                <div class="space-x-2">
+                    <button id="expandAllBtn" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                        Expand All
+                    </button>
+                    <button id="collapseAllBtn" class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                        Collapse All
+                    </button>
+                    <button id="clearLogBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                        Clear Log
+                    </button>
+                    <button id="forceShowResultsBtn" class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">
+                        Force Show Results
+                    </button>
+                </div>
+            </div>
+            <div id="debugLogContent" class="bg-gray-100 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto">
+                <div class="log-entry">Waiting for evaluation to start...</div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">E-Commerce Website Evaluation Report</h2>
+                
+                <!-- Navigation buttons -->
+                <div class="flex justify-end mb-4 print-buttons">
+                    <button id="printReportBtn" class="px-4 py-2 bg-green-100 text-green-700 rounded hover:bg-green-200 mr-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Print Report
+                    </button>
+                    <button id="scrollToDebugBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                        View Debug Log
+                    </button>
+                </div>
+                
+                <!-- Executive Summary -->
+                <div class="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-100">
+                    <h3 class="text-xl font-bold mb-3 text-blue-800">Executive Summary</h3>
+                    <p class="text-gray-700 mb-4">This report provides a comprehensive analysis of the evaluated e-commerce website based on simulated interactions from diverse user personas. The analysis covers navigation, design, findability, and overall user experience.</p>
+                    
+                    <!-- Overall Score Summary -->
+                    <div class="flex flex-col md:flex-row items-center justify-between">
+                        <div class="flex items-center mb-4 md:mb-0">
+                            <div class="relative w-32 h-32">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div id="overallScoreCircle" class="text-4xl font-bold text-blue-700"></div>
+                                </div>
+                                <svg class="w-full h-full" viewBox="0 0 36 36">
+                                    <path class="stroke-current text-blue-200" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                    <path id="overallScorePath" class="stroke-current text-blue-600" stroke-width="3" fill="none" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-2xl font-bold text-gray-800">Overall Score</div>
+                                <div class="text-gray-600">out of 10</div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full md:w-2/3">
+                            <div class="mb-3">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700 font-medium">Navigation</span>
+                                    <span id="navigationScoreText" class="text-blue-700 font-bold"></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div id="navigationScoreBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700 font-medium">Design</span>
+                                    <span id="designScoreText" class="text-blue-700 font-bold"></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div id="designScoreBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700 font-medium">Findability</span>
+                                    <span id="findabilityScoreText" class="text-blue-700 font-bold"></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div id="findabilityScoreBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Findings -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Key Findings
+                    </h3>
+                    <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                        <ul id="keyFindings" class="space-y-3"></ul>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        Recommendations
+                    </h3>
+                    <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                        <ul id="recommendations" class="space-y-3"></ul>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Performance Analysis
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                            <h4 class="text-lg font-semibold mb-3 text-gray-700">Score Distribution</h4>
+                            <img id="scoresChart" class="w-full" alt="Scores Distribution">
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                            <h4 class="text-lg font-semibold mb-3 text-gray-700">Issues by Category</h4>
+                            <img id="issuesChart" class="w-full" alt="Common Issues">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Behavior Analysis -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        User Behavior Analysis
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                            <h4 class="text-lg font-semibold mb-3 text-gray-700">Engagement Metrics</h4>
+                            <div id="behavioralEngagement" class="space-y-2"></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                            <h4 class="text-lg font-semibold mb-3 text-gray-700">Common Pain Points</h4>
+                            <div id="behavioralPainPoints" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI-Generated User Reviews -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        AI-Generated User Reviews
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                            <h4 class="text-lg font-semibold mb-3 text-gray-700">Average Ratings</h4>
+                            <div class="flex items-center mb-4">
+                                <div id="averageRating" class="text-3xl font-bold text-yellow-500 mr-2">0.0</div>
+                                <div class="text-gray-600">out of 5</div>
+                            </div>
+                            <div id="sentimentDistribution" class="space-y-2">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-gray-700">Positive</span>
+                                        <span id="positivePercentage" class="text-green-600 font-medium">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div id="positiveBar" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-gray-700">Neutral</span>
+                                        <span id="neutralPercentage" class="text-gray-600 font-medium">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div id="neutralBar" class="bg-gray-500 h-2 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-gray-700">Negative</span>
+                                        <span id="negativePercentage" class="text-red-600 font-medium">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div id="negativeBar" class="bg-red-500 h-2 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                            <h4 class="text-lg font-semibold mb-3 text-gray-700">Review Themes</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <h5 class="font-medium text-green-700 mb-2">Positive Themes</h5>
+                                    <ul id="positiveThemes" class="list-disc list-inside text-gray-700"></ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-medium text-red-700 mb-2">Negative Themes</h5>
+                                    <ul id="negativeThemes" class="list-disc list-inside text-gray-700"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Analysis -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Detailed Analysis
+                    </h3>
+                    <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                        <div id="detailedAnalysis" class="prose max-w-none"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden">
+            <div class="flex items-center justify-center p-12">
+                <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+            <p class="text-center text-gray-600">Evaluating website... This may take a few minutes.</p>
+        </div>
+    </div>
+
+    <script>
+        // Function to add a log entry to the debug log
+        function addLogEntry(message, type = 'info') {
+            const debugLogContent = document.getElementById('debugLogContent');
+            const entry = document.createElement('div');
+            
+            // Check if this is a detailed log that should be collapsible
+            const isDetailedLog = message.includes('Full Persona') || 
+                                 message.includes('Full Text') || 
+                                 message.includes('Generated personas:') ||
+                                 message.includes('Completed simulation for persona') ||
+                                 message.includes('Detailed simulation results for persona') ||
+                                 message.includes('Generated review');
+            
+            // Add appropriate classes
+            if (isDetailedLog) {
+                entry.className = `log-entry log-${type} my-1 detailed-log`;
+                
+                // Create collapsible structure
+                const now = new Date();
+                const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
+                
+                // Create header with toggle button
+                const header = document.createElement('div');
+                header.className = 'flex items-center cursor-pointer';
+                header.innerHTML = `
+                    <span class="text-gray-500 mr-2">[${timestamp}]</span>
+                    <span class="toggle-icon mr-2">▶</span>
+                    <span class="${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-blue-600'}">${message.split(':')[0]}:</span>
+                `;
+                
+                // Create content div (initially hidden)
+                const content = document.createElement('div');
+                content.className = 'ml-6 mt-1 whitespace-pre-wrap hidden';
+                
+                // Get the content part (after the first colon)
+                const contentText = message.substring(message.indexOf(':') + 1).trim();
+                
+                // Try to parse JSON for better formatting
+                try {
+                    const jsonData = JSON.parse(contentText);
+                    content.innerHTML = `<pre class="text-xs">${JSON.stringify(jsonData, null, 2)}</pre>`;
+                } catch (e) {
+                    // Not JSON, just use the text
+                    content.textContent = contentText;
+                }
+                
+                // Add toggle functionality
+                header.addEventListener('click', () => {
+                    const isHidden = content.classList.contains('hidden');
+                    content.classList.toggle('hidden');
+                    header.querySelector('.toggle-icon').textContent = isHidden ? '▼' : '▶';
+                });
+                
+                entry.appendChild(header);
+                entry.appendChild(content);
+            } else {
+                // Regular log entry
+                entry.className = `log-entry log-${type} my-1`;
+                
+                // Add timestamp
+                const now = new Date();
+                const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
+                
+                // Set entry content with timestamp
+                entry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> <span class="${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-blue-600'}">${message}</span>`;
+            }
+            
+            // Add to log
+            debugLogContent.appendChild(entry);
+            
+            // Scroll to bottom
+            debugLogContent.scrollTop = debugLogContent.scrollHeight;
+        }
+        
+        // Clear log button handler
+        document.getElementById('clearLogBtn').addEventListener('click', () => {
+            const debugLogContent = document.getElementById('debugLogContent');
+            debugLogContent.innerHTML = '<div class="log-entry">Log cleared</div>';
+        });
+        
+        // Expand all button handler
+        document.getElementById('expandAllBtn').addEventListener('click', () => {
+            const detailedLogs = document.querySelectorAll('.detailed-log');
+            detailedLogs.forEach(log => {
+                const content = log.querySelector('div:nth-child(2)');
+                const toggleIcon = log.querySelector('.toggle-icon');
+                content.classList.remove('hidden');
+                toggleIcon.textContent = '▼';
+            });
+        });
+        
+        // Collapse all button handler
+        document.getElementById('collapseAllBtn').addEventListener('click', () => {
+            const detailedLogs = document.querySelectorAll('.detailed-log');
+            detailedLogs.forEach(log => {
+                const content = log.querySelector('div:nth-child(2)');
+                const toggleIcon = log.querySelector('.toggle-icon');
+                content.classList.add('hidden');
+                toggleIcon.textContent = '▶';
+            });
+        });
+        
+        // Force show results button handler
+        document.getElementById('forceShowResultsBtn').addEventListener('click', () => {
+            forceShowResults();
+            addLogEntry('Forced results to be shown', 'info');
+        });
+        
+        // Scroll to debug log button handler
+        document.getElementById('scrollToDebugBtn').addEventListener('click', () => {
+            const debugLog = document.getElementById('debugLog');
+            debugLog.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        document.getElementById('evaluationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const loading = document.getElementById('loading');
+            const progress = document.getElementById('progress');
+            const debugLog = document.getElementById('debugLog');
+            const results = document.getElementById('results');
+            
+            // Reset UI
+            progress.classList.remove('hidden');
+            debugLog.classList.remove('hidden');
+            results.classList.add('hidden');
+            document.getElementById('progressMessage').textContent = 'Starting...';
+            document.getElementById('progressPercentage').textContent = '0%';
+            document.getElementById('progressBar').style.width = '0%';
+            
+            // Add initial log entry
+            addLogEntry('Evaluation started', 'info');
+            addLogEntry(`Target website: ${form.url.value}`, 'info');
+            addLogEntry(`Number of personas: ${form.num_personas.value}`, 'info');
+            
+            let eventSource = null;
+            
+            try {
+                // Start the evaluation
+                addLogEntry('Sending evaluation request to server...', 'info');
+                const startResponse = await fetch('/api/evaluate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: form.url.value,
+                        num_personas: parseInt(form.num_personas.value)
+                    })
+                });
+                
+                if (!startResponse.ok) {
+                    throw new Error(`HTTP error! status: ${startResponse.status}`);
+                }
+                
+                const startData = await startResponse.json();
+                addLogEntry(`Evaluation request response: ${JSON.stringify(startData)}`, 'info');
+                
+                if (startData.status !== 'started') {
+                    throw new Error(startData.message || 'Failed to start evaluation');
+                }
+                
+                const evaluationId = startData.evaluation_id;
+                addLogEntry(`Evaluation ID: ${evaluationId}`, 'success');
+                
+                // Start progress monitoring
+                addLogEntry('Connecting to progress stream...', 'info');
+                eventSource = new EventSource('/api/progress');
+                let evaluationComplete = false;
+                
+                eventSource.onmessage = async (event) => {
+                    const data = JSON.parse(event.data);
+                    document.getElementById('progressMessage').textContent = data.message;
+                    
+                    // Add to debug log
+                    let logType = 'info';
+                    if (data.message.startsWith('Error')) {
+                        logType = 'error';
+                    } else if (data.percentage === 100) {
+                        logType = 'success';
+                    }
+                    
+                    addLogEntry(data.message, logType);
+                    
+                    // Add detailed log entries based on the message content
+                    if (data.message.includes('Generating personas')) {
+                        addLogEntry('Starting persona generation process...', 'info');
+                    } else if (data.message.includes('Simulating interaction')) {
+                        const match = data.message.match(/persona (\d+)\/(\d+)/);
+                        if (match) {
+                            const current = match[1];
+                            const total = match[2];
+                            addLogEntry(`Simulating website interaction for persona ${current} of ${total}`, 'info');
+                        }
+                    } else if (data.message.includes('Generating review')) {
+                        const match = data.message.match(/review (\d+)\/(\d+)/);
+                        if (match) {
+                            const current = match[1];
+                            const total = match[2];
+                            addLogEntry(`Generating detailed review for persona ${current} of ${total}`, 'info');
+                        }
+                    } else if (data.message.includes('expert analysis')) {
+                        addLogEntry('Starting expert analysis of all reviews...', 'info');
+                    }
+                    
+                    if (data.percentage !== null) {
+                        document.getElementById('progressPercentage').textContent = `${data.percentage}%`;
+                        document.getElementById('progressBar').style.width = `${data.percentage}%`;
+                    }
+                    
+                    // When progress is complete or error occurs
+                    if (data.percentage === 100 || data.message.startsWith('Error')) {
+                        evaluationComplete = true;
+                        eventSource.close();
+                        eventSource = null;
+                        
+                        if (data.message.startsWith('Error')) {
+                            addLogEntry(`Evaluation failed: ${data.message}`, 'error');
+                            throw new Error(data.message);
+                        }
+                        
+                        // Fetch final results
+                        addLogEntry('Evaluation complete. Fetching results...', 'success');
+                        const resultsResponse = await fetch(`/api/results/${evaluationId}`);
+                        if (!resultsResponse.ok) {
+                            throw new Error(`HTTP error! status: ${resultsResponse.status}`);
+                        }
+                        
+                        const resultsData = await resultsResponse.json();
+                        addLogEntry('Results received from server', 'success');
+                        
+                        // Debug: Log the entire results data
+                        console.log('Results data:', resultsData);
+                        addLogEntry(`Debug - Results data structure: ${JSON.stringify(resultsData).substring(0, 500)}...`, 'info');
+                        
+                        if (resultsData.status === 'success') {
+                            // Log result summary
+                            addLogEntry(`Overall score: ${resultsData.report.overall_scores.overall.toFixed(1)}/10`, 'success');
+                            addLogEntry(`Found ${resultsData.report.key_findings.length} key findings`, 'info');
+                            addLogEntry(`Generated ${resultsData.report.recommendations.length} recommendations`, 'info');
+                            
+                            // Debug: Log the scores
+                            console.log('Scores:', resultsData.report.overall_scores);
+                            addLogEntry(`Debug - Scores: ${JSON.stringify(resultsData.report.overall_scores)}`, 'info');
+                            
+                            try {
+                                // Update scores - handle different property names
+                                const scores = resultsData.report.overall_scores;
+                                
+                                // Get navigation score (could be 'navigation' or 'navigation_score')
+                                const navScore = scores.navigation !== undefined ? scores.navigation : 
+                                                (scores.navigation_score !== undefined ? scores.navigation_score : 0);
+                                
+                                // Get design score (could be 'design' or 'design_score')
+                                const designScore = scores.design !== undefined ? scores.design : 
+                                                  (scores.design_score !== undefined ? scores.design_score : 0);
+                                
+                                // Get findability score (could be 'findability' or 'findability_score')
+                                const findScore = scores.findability !== undefined ? scores.findability : 
+                                                (scores.findability_score !== undefined ? scores.findability_score : 0);
+                                
+                                // Get overall score
+                                const overallScore = scores.overall !== undefined ? scores.overall : 0;
+                                
+                                // Update text displays
+                                document.getElementById('navigationScoreText').textContent = navScore.toFixed(1) + '/10';
+                                document.getElementById('designScoreText').textContent = designScore.toFixed(1) + '/10';
+                                document.getElementById('findabilityScoreText').textContent = findScore.toFixed(1) + '/10';
+                                document.getElementById('overallScoreCircle').textContent = overallScore.toFixed(1);
+                                
+                                // Update progress bars
+                                document.getElementById('navigationScoreBar').style.width = `${navScore * 10}%`;
+                                document.getElementById('designScoreBar').style.width = `${designScore * 10}%`;
+                                document.getElementById('findabilityScoreBar').style.width = `${findScore * 10}%`;
+                                
+                                // Update overall score circle
+                                const circlePath = document.getElementById('overallScorePath');
+                                const circumference = 2 * Math.PI * 15.9155; // Based on the SVG path
+                                const dashOffset = circumference - (overallScore / 10) * circumference;
+                                circlePath.style.strokeDasharray = `${circumference}`;
+                                circlePath.style.strokeDashoffset = `${dashOffset}`;
+                                
+                                // Update charts
+                                if (resultsData.report.charts && resultsData.report.charts.scores_distribution) {
+                                    document.getElementById('scoresChart').src = 
+                                        `data:image/png;base64,${resultsData.report.charts.scores_distribution}`;
+                                } else {
+                                    addLogEntry('Warning: Scores distribution chart data is missing', 'error');
+                                }
+                                
+                                if (resultsData.report.charts && resultsData.report.charts.issues_frequency) {
+                                    document.getElementById('issuesChart').src = 
+                                        `data:image/png;base64,${resultsData.report.charts.issues_frequency}`;
+                                } else {
+                                    addLogEntry('Warning: Issues frequency chart data is missing', 'error');
+                                }
+                                
+                                // Update behavioral insights
+                                if (resultsData.report.behavioral_insights) {
+                                    const behavioralData = resultsData.report.behavioral_insights;
+                                    
+                                    // Engagement metrics
+                                    const engagementDiv = document.getElementById('behavioralEngagement');
+                                    engagementDiv.innerHTML = ''; // Clear previous content
+                                    
+                                    if (behavioralData.engagement_level) {
+                                        engagementDiv.innerHTML += `
+                                            <div class="mb-3">
+                                                <div class="font-medium text-gray-700">Primary Engagement Level</div>
+                                                <div class="text-lg font-semibold">${behavioralData.engagement_level}</div>
+                                            </div>
+                                        `;
+                                    } else {
+                                        engagementDiv.innerHTML += `
+                                            <div class="mb-3">
+                                                <div class="font-medium text-gray-700">Primary Engagement Level</div>
+                                                <div class="text-lg font-semibold">Moderate</div>
+                                            </div>
+                                        `;
+                                    }
+                                    
+                                    if (behavioralData.areas_of_interest && behavioralData.areas_of_interest.length > 0) {
+                                        engagementDiv.innerHTML += `
+                                            <div>
+                                                <div class="font-medium text-gray-700">Areas of Interest</div>
+                                                <ul class="list-disc list-inside text-gray-600 mt-1">
+                                                    ${behavioralData.areas_of_interest.map(area => `<li>${area}</li>`).join('')}
+                                                </ul>
+                                            </div>
+                                        `;
+                                    }
+                                    
+                                    // Pain points
+                                    const painPointsDiv = document.getElementById('behavioralPainPoints');
+                                    painPointsDiv.innerHTML = ''; // Clear previous content
+                                    
+                                    if (behavioralData.pain_points && behavioralData.pain_points.length > 0) {
+                                        painPointsDiv.innerHTML = `
+                                            <ul class="list-disc list-inside text-gray-600">
+                                                ${behavioralData.pain_points.map(point => `<li>${point}</li>`).join('')}
+                                            </ul>
+                                        `;
+                                    } else {
+                                        painPointsDiv.innerHTML = `
+                                            <p class="text-gray-600">No specific pain points identified.</p>
+                                        `;
+                                    }
+                                } else {
+                                    // Set default values if behavioral insights are missing
+                                    document.getElementById('behavioralEngagement').innerHTML = `
+                                        <div class="mb-3">
+                                            <div class="font-medium text-gray-700">Primary Engagement Level</div>
+                                            <div class="text-lg font-semibold">Moderate</div>
+                                        </div>
+                                    `;
+                                    
+                                    document.getElementById('behavioralPainPoints').innerHTML = `
+                                        <p class="text-gray-600">No specific pain points identified.</p>
+                                    `;
+                                }
+                                
+                                // Update AI review insights
+                                if (resultsData.report.ai_review_insights) {
+                                    const reviewData = resultsData.report.ai_review_insights;
+                                    
+                                    // Average rating
+                                    if (reviewData.average_rating !== undefined) {
+                                        document.getElementById('averageRating').textContent = reviewData.average_rating.toFixed(1);
+                                    } else {
+                                        document.getElementById('averageRating').textContent = '3.0';
+                                    }
+                                    
+                                    // Sentiment distribution
+                                    if (reviewData.sentiment_distribution) {
+                                        const sentiments = reviewData.sentiment_distribution;
+                                        const positivePercentage = sentiments.positive || 0;
+                                        const neutralPercentage = sentiments.neutral || 0;
+                                        const negativePercentage = sentiments.negative || 0;
+                                        
+                                        document.getElementById('positivePercentage').textContent = `${positivePercentage}%`;
+                                        document.getElementById('neutralPercentage').textContent = `${neutralPercentage}%`;
+                                        document.getElementById('negativePercentage').textContent = `${negativePercentage}%`;
+                                        
+                                        document.getElementById('positiveBar').style.width = `${positivePercentage}%`;
+                                        document.getElementById('neutralBar').style.width = `${neutralPercentage}%`;
+                                        document.getElementById('negativeBar').style.width = `${negativePercentage}%`;
+                                    } else {
+                                        // Default distribution
+                                        document.getElementById('positivePercentage').textContent = '33%';
+                                        document.getElementById('neutralPercentage').textContent = '34%';
+                                        document.getElementById('negativePercentage').textContent = '33%';
+                                        
+                                        document.getElementById('positiveBar').style.width = '33%';
+                                        document.getElementById('neutralBar').style.width = '34%';
+                                        document.getElementById('negativeBar').style.width = '33%';
+                                    }
+                                    
+                                    // Review themes
+                                    const positiveThemesEl = document.getElementById('positiveThemes');
+                                    const negativeThemesEl = document.getElementById('negativeThemes');
+                                    
+                                    positiveThemesEl.innerHTML = '';
+                                    negativeThemesEl.innerHTML = '';
+                                    
+                                    if (reviewData.positive_themes && reviewData.positive_themes.length > 0) {
+                                        positiveThemesEl.innerHTML = 
+                                            reviewData.positive_themes.map(theme => `<li>${theme}</li>`).join('');
+                                    } else {
+                                        positiveThemesEl.innerHTML = '<li>No specific positive themes identified</li>';
+                                    }
+                                    
+                                    if (reviewData.negative_themes && reviewData.negative_themes.length > 0) {
+                                        negativeThemesEl.innerHTML = 
+                                            reviewData.negative_themes.map(theme => `<li>${theme}</li>`).join('');
+                                    } else {
+                                        negativeThemesEl.innerHTML = '<li>No specific negative themes identified</li>';
+                                    }
+                                } else {
+                                    // Set default values if AI review insights are missing
+                                    document.getElementById('averageRating').textContent = '3.0';
+                                    
+                                    document.getElementById('positivePercentage').textContent = '33%';
+                                    document.getElementById('neutralPercentage').textContent = '34%';
+                                    document.getElementById('negativePercentage').textContent = '33%';
+                                    
+                                    document.getElementById('positiveBar').style.width = '33%';
+                                    document.getElementById('neutralBar').style.width = '34%';
+                                    document.getElementById('negativeBar').style.width = '33%';
+                                    
+                                    document.getElementById('positiveThemes').innerHTML = '<li>No specific positive themes identified</li>';
+                                    document.getElementById('negativeThemes').innerHTML = '<li>No specific negative themes identified</li>';
+                                }
+                                
+                                // Update findings and recommendations with icons
+                                const findingsList = document.getElementById('keyFindings');
+                                findingsList.innerHTML = '';
+                                
+                                if (resultsData.report.key_findings && resultsData.report.key_findings.length > 0) {
+                                    findingsList.innerHTML = resultsData.report.key_findings
+                                        .map(finding => `
+                                            <li class="flex items-start">
+                                                <span class="text-yellow-500 mr-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                </span>
+                                                <span>${finding}</span>
+                                            </li>
+                                        `)
+                                        .join('');
+                                } else {
+                                    findingsList.innerHTML = `
+                                        <li class="flex items-start">
+                                            <span class="text-yellow-500 mr-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                            </span>
+                                            <span>Website evaluation completed with limited data available.</span>
+                                        </li>
+                                    `;
+                                }
+                                
+                                const recommendationsList = document.getElementById('recommendations');
+                                recommendationsList.innerHTML = '';
+                                
+                                if (resultsData.report.recommendations && resultsData.report.recommendations.length > 0) {
+                                    recommendationsList.innerHTML = resultsData.report.recommendations
+                                        .map(rec => `
+                                            <li class="flex items-start">
+                                                <span class="text-green-500 mr-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </span>
+                                                <span>${rec}</span>
+                                            </li>
+                                        `)
+                                        .join('');
+                                } else {
+                                    recommendationsList.innerHTML = `
+                                        <li class="flex items-start">
+                                            <span class="text-green-500 mr-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </span>
+                                            <span>Consider running a more detailed evaluation with more personas for better insights.</span>
+                                        </li>
+                                    `;
+                                }
+                                
+                                // Update detailed analysis with markdown parsing
+                                const detailedAnalysisDiv = document.getElementById('detailedAnalysis');
+                                if (resultsData.report.detailed_analysis) {
+                                    const detailedAnalysisContent = resultsData.report.detailed_analysis.replace(/\n/g, '<br>');
+                                    detailedAnalysisDiv.innerHTML = detailedAnalysisContent;
+                                } else {
+                                    detailedAnalysisDiv.innerHTML = '<p>No detailed analysis available for this evaluation.</p>';
+                                }
+                                
+                                // Show results and hide progress
+                                const resultsElement = document.getElementById('results');
+                                resultsElement.classList.remove('hidden');
+                                addLogEntry(`Debug - Results element display: ${window.getComputedStyle(resultsElement).display}`, 'info');
+                                
+                                progress.classList.add('hidden');
+                                
+                                // Keep debug log visible below results
+                                debugLog.classList.remove('hidden');
+                                
+                                // Log completion
+                                addLogEntry('Results displayed successfully', 'success');
+                            } catch (error) {
+                                console.error('Error updating UI with results:', error);
+                                addLogEntry(`Error updating UI: ${error.message}`, 'error');
+                            }
+                        } else {
+                            throw new Error(resultsData.message || 'Failed to get evaluation results');
+                        }
+                    }
+                };
+                
+                // Handle SSE errors
+                eventSource.onerror = (error) => {
+                    console.error('SSE Error:', error);
+                    addLogEntry(`Error in progress stream: ${error}`, 'error');
+                    if (eventSource) {
+                        eventSource.close();
+                        eventSource = null;
+                    }
+                    if (!evaluationComplete) {
+                        document.getElementById('progressMessage').textContent = 'Error: Lost connection to server';
+                        document.getElementById('progressPercentage').textContent = 'Failed';
+                    }
+                };
+                
+            } catch (error) {
+                console.error('Evaluation error:', error);
+                addLogEntry(`Error: ${error.message}`, 'error');
+                
+                // Update progress bar to show error
+                document.getElementById('progressMessage').textContent = `Error: ${error.message}`;
+                document.getElementById('progressPercentage').textContent = 'Failed';
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressBar').style.backgroundColor = '#EF4444';  // Red color
+                
+                // Clean up event source if it exists
+                if (eventSource) {
+                    eventSource.close();
+                    eventSource = null;
+                }
+            }
+        });
+        
+        // Print report functionality
+        document.getElementById('printReportBtn').addEventListener('click', () => {
+            window.print();
+        });
+
+        // Add a function to force show results (for debugging)
+        function forceShowResults() {
+            const results = document.getElementById('results');
+            results.classList.remove('hidden');
+            results.classList.add('debug-border');
+            results.style.display = 'block';
+            console.log('Force showing results');
+            return 'Results should be visible now';
+        }
+    </script>
+    
+    <style>
+        @media print {
+            body {
+                background-color: white;
+            }
+            
+            .container {
+                max-width: 100%;
+                padding: 0;
+            }
+            
+            header, .no-print, #evaluationForm, #progress, #debugLog, .print-buttons {
+                display: none !important;
+            }
+            
+            #results {
+                display: block !important;
+            }
+            
+            .bg-white, .bg-blue-50, .bg-gray-50 {
+                box-shadow: none !important;
+                border: 1px solid #eee !important;
+            }
+            
+            h2, h3, h4 {
+                break-after: avoid;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+        }
+        
+        /* Improve list styling */
+        #keyFindings li, #recommendations li {
+            margin-bottom: 0.75rem;
+        }
+        
+        /* Improve chart container styling */
+        .chart-container {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Ensure results are visible when not hidden */
+        #results:not(.hidden) {
+            display: block !important;
+            z-index: 10;
+        }
+        
+        /* Debug styles */
+        .debug-border {
+            border: 2px solid red !important;
+        }
+    </style>
+</body>
+</html>
