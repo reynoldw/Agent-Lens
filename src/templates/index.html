@@ -764,10 +764,77 @@
                 if (keyFindings) {
                     console.log('Setting key findings:', data.report?.key_findings);
                     keyFindings.innerHTML = '';
+                    
+                    // Process findings with markdown-like formatting
+                    let currentSection = null;
+                    
                     (data.report?.key_findings || []).forEach(finding => {
-                        const li = document.createElement('li');
-                        li.textContent = finding;
-                        keyFindings.appendChild(li);
+                        // Check if this is a section header (starts with ##)
+                        if (finding.startsWith('## ')) {
+                            // Create a new section
+                            currentSection = document.createElement('div');
+                            currentSection.className = 'mb-4';
+                            
+                            // Create section header
+                            const header = document.createElement('h4');
+                            header.className = 'text-lg font-semibold text-gray-800 mb-2';
+                            header.textContent = finding.substring(3); // Remove the ## prefix
+                            currentSection.appendChild(header);
+                            
+                            keyFindings.appendChild(currentSection);
+                        } 
+                        // Check if this is a subsection (starts with **)
+                        else if (finding.startsWith('**') && finding.endsWith(':**')) {
+                            // Create subsection header
+                            const subheader = document.createElement('h5');
+                            subheader.className = 'text-md font-medium text-gray-700 mt-3 mb-1';
+                            subheader.textContent = finding.substring(2, finding.length - 3); // Remove ** and :**
+                            
+                            if (currentSection) {
+                                currentSection.appendChild(subheader);
+                            } else {
+                                keyFindings.appendChild(subheader);
+                            }
+                        }
+                        // Check if this is a list item (starts with -)
+                        else if (finding.startsWith('- ')) {
+                            // Create list item
+                            const listItem = document.createElement('li');
+                            listItem.className = 'ml-5 text-gray-600';
+                            listItem.textContent = finding.substring(2); // Remove the - prefix
+                            
+                            // Find or create a list to add this item to
+                            let list;
+                            if (currentSection) {
+                                list = currentSection.querySelector('ul:last-child');
+                                if (!list) {
+                                    list = document.createElement('ul');
+                                    list.className = 'list-disc ml-5 mt-1 mb-3';
+                                    currentSection.appendChild(list);
+                                }
+                            } else {
+                                list = keyFindings.querySelector('ul:last-child');
+                                if (!list) {
+                                    list = document.createElement('ul');
+                                    list.className = 'list-disc ml-5 mt-1 mb-3';
+                                    keyFindings.appendChild(list);
+                                }
+                            }
+                            
+                            list.appendChild(listItem);
+                        }
+                        // Regular text
+                        else {
+                            const paragraph = document.createElement('p');
+                            paragraph.className = 'text-gray-600 mb-2';
+                            paragraph.textContent = finding;
+                            
+                            if (currentSection) {
+                                currentSection.appendChild(paragraph);
+                            } else {
+                                keyFindings.appendChild(paragraph);
+                            }
+                        }
                     });
                 }
 
@@ -776,10 +843,77 @@
                 if (recommendations) {
                     console.log('Setting recommendations:', data.report?.recommendations);
                     recommendations.innerHTML = '';
+                    
+                    // Process recommendations with markdown-like formatting
+                    let currentSection = null;
+                    
                     (data.report?.recommendations || []).forEach(rec => {
-                        const li = document.createElement('li');
-                        li.textContent = rec;
-                        recommendations.appendChild(li);
+                        // Check if this is a section header (starts with ##)
+                        if (rec.startsWith('## ')) {
+                            // Create a new section
+                            currentSection = document.createElement('div');
+                            currentSection.className = 'mb-4';
+                            
+                            // Create section header
+                            const header = document.createElement('h4');
+                            header.className = 'text-lg font-semibold text-gray-800 mb-2';
+                            header.textContent = rec.substring(3); // Remove the ## prefix
+                            currentSection.appendChild(header);
+                            
+                            recommendations.appendChild(currentSection);
+                        } 
+                        // Check if this is a subsection (starts with **)
+                        else if (rec.startsWith('**') && rec.endsWith(':**')) {
+                            // Create subsection header
+                            const subheader = document.createElement('h5');
+                            subheader.className = 'text-md font-medium text-gray-700 mt-3 mb-1';
+                            subheader.textContent = rec.substring(2, rec.length - 3); // Remove ** and :**
+                            
+                            if (currentSection) {
+                                currentSection.appendChild(subheader);
+                            } else {
+                                recommendations.appendChild(subheader);
+                            }
+                        }
+                        // Check if this is a list item (starts with -)
+                        else if (rec.startsWith('- ')) {
+                            // Create list item
+                            const listItem = document.createElement('li');
+                            listItem.className = 'ml-5 text-gray-600';
+                            listItem.textContent = rec.substring(2); // Remove the - prefix
+                            
+                            // Find or create a list to add this item to
+                            let list;
+                            if (currentSection) {
+                                list = currentSection.querySelector('ul:last-child');
+                                if (!list) {
+                                    list = document.createElement('ul');
+                                    list.className = 'list-disc ml-5 mt-1 mb-3';
+                                    currentSection.appendChild(list);
+                                }
+                            } else {
+                                list = recommendations.querySelector('ul:last-child');
+                                if (!list) {
+                                    list = document.createElement('ul');
+                                    list.className = 'list-disc ml-5 mt-1 mb-3';
+                                    recommendations.appendChild(list);
+                                }
+                            }
+                            
+                            list.appendChild(listItem);
+                        }
+                        // Regular text
+                        else {
+                            const paragraph = document.createElement('p');
+                            paragraph.className = 'text-gray-600 mb-2';
+                            paragraph.textContent = rec;
+                            
+                            if (currentSection) {
+                                currentSection.appendChild(paragraph);
+                            } else {
+                                recommendations.appendChild(paragraph);
+                            }
+                        }
                     });
                 }
                 
@@ -991,14 +1125,12 @@
     </script>
     
     <style>
+        /* Print styles */
         @media print {
             body {
-                background-color: white;
-            }
-            
-            .container {
-                max-width: 100%;
-                padding: 0;
+                font-size: 12pt;
+                color: #000;
+                background-color: #fff;
             }
             
             header, .no-print, #evaluationForm, #progress, #debugLog, .print-buttons {
@@ -1007,44 +1139,127 @@
             
             #results {
                 display: block !important;
+                margin: 0;
+                padding: 0;
             }
             
-            .bg-white, .bg-blue-50, .bg-gray-50 {
+            .container {
+                width: 100%;
+                max-width: none;
+                padding: 0;
+                margin: 0;
+            }
+            
+            h1 {
+                font-size: 18pt;
+                margin-bottom: 10pt;
+            }
+            
+            h2 {
+                font-size: 16pt;
+                margin-top: 15pt;
+                margin-bottom: 10pt;
+            }
+            
+            h3 {
+                font-size: 14pt;
+                margin-top: 10pt;
+                margin-bottom: 5pt;
+            }
+            
+            p, li {
+                font-size: 10pt;
+                line-height: 1.4;
+            }
+            
+            .bg-white {
+                background-color: #fff !important;
                 box-shadow: none !important;
-                border: 1px solid #eee !important;
+                border: none !important;
+                padding: 0 !important;
             }
             
-            h2, h3, h4 {
-                break-after: avoid;
+            .grid {
+                display: block;
             }
             
-            .page-break {
-                page-break-before: always;
+            .grid > div {
+                margin-bottom: 15pt;
+            }
+            
+            img {
+                max-width: 100% !important;
+                page-break-inside: avoid;
+            }
+            
+            @page {
+                margin: 1.5cm;
             }
         }
         
-        /* Improve list styling */
-        #keyFindings li, #recommendations li {
-            margin-bottom: 0.75rem;
-        }
-        
-        /* Improve chart container styling */
-        .chart-container {
-            background-color: white;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Ensure results are visible when not hidden */
-        #results:not(.hidden) {
-            display: block !important;
-            z-index: 10;
-        }
-        
-        /* Debug styles */
+        /* Debug border for forced results */
         .debug-border {
-            border: 2px solid red !important;
+            border: 2px dashed #FF0000;
+        }
+        
+        /* Log entry styling */
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        /* Findings and recommendations styling */
+        #keyFindings h4, #recommendations h4 {
+            color: #1e40af;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        #keyFindings h5, #recommendations h5 {
+            color: #4b5563;
+            font-weight: 600;
+            margin-top: 0.75rem;
+        }
+        
+        #keyFindings ul, #recommendations ul {
+            margin-bottom: 1rem;
+        }
+        
+        #keyFindings li, #recommendations li {
+            margin-bottom: 0.25rem;
+            line-height: 1.5;
+        }
+        
+        /* Score styling */
+        .score-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .score-label {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .score-value {
+            font-weight: 600;
+            color: #1e40af;
+        }
+        
+        .score-bar {
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background-color: #3b82f6;
+            border-radius: 4px;
         }
     </style>
 </body>

@@ -1,0 +1,59 @@
+# E-Commerce Website Evaluator Configuration
+
+api:
+  openai:
+    model: "gpt-4"
+    timeout: 45
+    max_tokens: 1000
+  anthropic:
+    model: "claude-3-sonnet-20240229"
+    timeout: 45
+    max_tokens: 1000
+
+app:
+  debug: true
+  log_level: "INFO"
+  temp_dir: "./temp"
+  output_dir: "./output"
+  screenshots_dir: "./screenshots"
+  host: "127.0.0.1"
+  port: 5000
+
+simulation:
+  browser:
+    headless: true
+    browser_type: "chromium"
+    timeout: 60000
+    max_browsers: 3
+    idle_timeout: 300
+    viewport:
+      desktop:
+        width: 1280
+        height: 800
+      tablet:
+        width: 768
+        height: 1024
+      mobile:
+        width: 375
+        height: 667
+  personas:
+    count: 3
+  jobs:
+    max_retries: 2
+    concurrent_jobs: 2
+    default_job: "product_discovery"
+  selectors:
+    cache_file: "./data/selectors.yaml"
+
+analysis:
+  min_data_points: 2
+  chart_dpi: 100
+  chart_style: "ggplot"
+  chart_colors:
+    - "#4285F4"  # Google Blue
+    - "#34A853"  # Google Green
+    - "#FBBC05"  # Google Yellow
+    - "#EA4335"  # Google Red
+
+security:
+  token_required: false 

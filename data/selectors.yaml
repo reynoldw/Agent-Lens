@@ -1,0 +1,192 @@
+# E-Commerce Website Element Selectors Configuration
+
+# Default selectors that work on most e-commerce sites
+default:
+  search_inputs:
+    - 'input[type="search"]'
+    - 'input[placeholder*="search" i]'
+    - 'input[placeholder*="find" i]'
+    - 'input[name*="search" i]'
+    - 'input[id*="search" i]'
+    - 'input[class*="search" i]'
+    - '.search-input'
+    - '#search'
+  
+  search_buttons:
+    - 'button[type="submit"]'
+    - 'button.search-button'
+    - 'button[aria-label*="search" i]'
+    - 'input[type="submit"]'
+  
+  category_links:
+    - 'a[href*="category"]'
+    - 'a[href*="department"]'
+    - '.category-link'
+    - '.department-link'
+    - 'nav a'
+  
+  product_links:
+    - '.product-card'
+    - '.product-link'
+    - 'a[href*="product"]'
+    - '.item-card'
+    - '[data-testid*="product"]'
+  
+  add_to_cart_buttons:
+    - 'button[id*="add-to-cart"]'
+    - 'button[class*="add-to-cart"]'
+    - 'button:has-text("Add to Cart")'
+    - 'button:has-text("Buy Now")'
+    - 'button.buy-button'
+    - '[data-testid*="add-to-cart"]'
+  
+  checkout_buttons:
+    - 'a[href*="checkout"]'
+    - 'button:has-text("Checkout")'
+    - 'button:has-text("Proceed to Checkout")'
+    - '.checkout-button'
+    - '[data-testid*="checkout"]'
+  
+  price_elements:
+    - '.price'
+    - '[class*="price"]'
+    - '[id*="price"]'
+    - '.product-price'
+    - '.amount'
+  
+  shipping_elements:
+    - '[class*="shipping"]'
+    - '[id*="shipping"]'
+    - '.delivery-info'
+    - '[class*="delivery"]'
+    - '[data-test*="shipping"]'
+  
+  review_elements:
+    - '[class*="review"]'
+    - '[id*="review"]'
+    - '.reviews-section'
+    - '.ratings-and-reviews'
+    - '[data-test*="review"]'
+  
+  specification_elements:
+    - '[class*="specification"]'
+    - '[class*="spec"]'
+    - '[id*="specification"]'
+    - '[id*="spec"]'
+    - '.product-details'
+    - '.technical-details'
+    - '.features'
+  
+  account_elements:
+    - 'a[href*="account"]'
+    - 'a[href*="login"]'
+    - 'a[href*="profile"]'
+    - '[class*="account"]'
+    - '[class*="login"]'
+    - '[class*="user"]'
+    - 'header [class*="account"]'
+    - 'header [class*="login"]'
+
+# Shopify-specific selectors
+shopify:
+  search_inputs:
+    - 'input[name="q"]'
+    - 'input[aria-label="Search"]'
+    - 'form[action*="search"] input'
+  
+  add_to_cart_buttons:
+    - 'button[name="add"]'
+    - 'button.product-form__submit'
+    - 'button[data-testid="Checkout-button"]'
+  
+  checkout_buttons:
+    - 'button[name="checkout"]'
+    - '.shopify-payment-button__button'
+  
+  price_elements:
+    - '.price'
+    - '.price__regular'
+    - '.price__sale'
+    - '[data-product-price]'
+
+# WooCommerce-specific selectors
+woocommerce:
+  add_to_cart_buttons:
+    - 'button.add_to_cart_button'
+    - 'button.single_add_to_cart_button'
+    - '.add_to_cart_button'
+  
+  checkout_buttons:
+    - 'a.checkout-button'
+    - '.wc-proceed-to-checkout'
+    - '.checkout-button'
+  
+  price_elements:
+    - '.price'
+    - '.amount'
+    - '.woocommerce-Price-amount'
+
+# Magento-specific selectors
+magento:
+  search_inputs:
+    - '#search'
+    - 'input#search'
+  
+  add_to_cart_buttons:
+    - 'button.tocart'
+    - '#product-addtocart-button'
+  
+  checkout_buttons:
+    - 'button.checkout'
+    - '#top-cart-btn-checkout'
+
+# Amazon-specific selectors
+amazon:
+  search_inputs:
+    - '#twotabsearchtextbox'
+  
+  search_buttons:
+    - 'input[value="Go"]'
+    - 'input.nav-input'
+  
+  add_to_cart_buttons:
+    - '#add-to-cart-button'
+    - '#submit.add-to-cart'
+  
+  checkout_buttons:
+    - '#hlb-ptc-btn-native'
+    - '#sc-buy-box-ptc-button'
+  
+  price_elements:
+    - '.a-price'
+    - '#priceblock_ourprice'
+    - '#priceblock_dealprice'
+
+# Walmart-specific selectors
+walmart:
+  search_inputs:
+    - '#global-search-input'
+  
+  add_to_cart_buttons:
+    - 'button[data-tl-id*="AddToCartBtn"]'
+    - 'button[data-automation-id="add-to-cart"]'
+  
+  price_elements:
+    - '[data-automation-id="product-price"]'
+    - '.price-characteristic'
+
+# eBay-specific selectors
+ebay:
+  search_inputs:
+    - '#gh-ac'
+  
+  search_buttons:
+    - '#gh-btn'
+  
+  add_to_cart_buttons:
+    - '.vi-atl-btncart'
+    - '#vi-atl-lnk'
+  
+  price_elements:
+    - '.x-price'
+    - '.vi-price' 

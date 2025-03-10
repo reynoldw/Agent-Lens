@@ -63,12 +63,25 @@ except Exception as e:
 # Initialize AI client
 openai_api_key = os.environ.get("OPENAI_API_KEY") or config.get("api.openai_key")
 anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY") or config.get("api.anthropic_key")
+openai_model = os.environ.get("OPENAI_MODEL") or config.get("api.openai.model", "gpt-4")
+anthropic_model = os.environ.get("ANTHROPIC_MODEL") or config.get("api.anthropic.model", "claude-3-opus-20240229")
+default_provider = os.environ.get("DEFAULT_AI_PROVIDER") or config.get("api.default_provider", "openai" if openai_api_key else "anthropic")
 
 logger.info(f"OpenAI API key present: {'Yes' if openai_api_key else 'No'}")
 logger.info(f"Anthropic API key present: {'Yes' if anthropic_api_key else 'No'}")
+logger.info(f"Using OpenAI model: {openai_model}")
+logger.info(f"Using Anthropic model: {anthropic_model}")
+logger.info(f"Default AI provider: {default_provider}")
 
 try:
-    ai_client = AIClient(openai_api_key=openai_api_key, anthropic_api_key=anthropic_api_key)
+    ai_client = AIClient(
+        openai_api_key=openai_api_key, 
+        anthropic_api_key=anthropic_api_key
+    )
+    # Set default models and provider
+    ai_client.openai_model = openai_model
+    ai_client.anthropic_model = anthropic_model
+    ai_client.default_provider = default_provider
 except Exception as e:
     logger.error(f"Error initializing AI client: {e}")
     ai_client = None
@@ -149,6 +162,15 @@ def evaluate_website():
         if not website_url:
             raise ValidationError("Missing URL parameter", field="url")
             
+        # Get number of personas from request
+        num_personas = request.json.get('num_personas', 3)
+        try:
+            num_personas = int(num_personas)
+            # Limit to a reasonable range
+            num_personas = max(1, min(num_personas, 10))
+        except (ValueError, TypeError):
+            num_personas = 3  # Default if invalid
+            
         # Generate a unique evaluation ID
         evaluation_id = f"eval_{int(datetime.now().timestamp())}"
         
@@ -158,7 +180,7 @@ def evaluate_website():
         # Start evaluation in a separate thread
         thread = Thread(
             target=run_evaluation,
-            args=(evaluation_id, website_url),
+            args=(evaluation_id, website_url, num_personas),
             daemon=True
         )
         thread.start()
@@ -174,33 +196,64 @@ def evaluate_website():
         return jsonify(format_error_response(e)), 400
 
 
-def run_evaluation(evaluation_id: str, website_url: str):
+def run_evaluation(evaluation_id: str, website_url: str, num_personas: int = 3):
     """Run the complete evaluation process."""
     try:
+        # Ensure progress queue exists
+        if evaluation_id not in progress_queues:
+            logger.error(f"Progress queue for evaluation {evaluation_id} not found. Creating a new one.")
+            progress_queues[evaluation_id] = Queue()
+        
         # Send initial progress update
         send_progress(evaluation_id, "Starting evaluation...", 5)
+        logger.info(f"Starting evaluation {evaluation_id} for {website_url} with {num_personas} personas")
         
         # Generate personas
-        send_progress(evaluation_id, "Generating personas...", 10)
+        send_progress(evaluation_id, f"Generating personas ({num_personas})...", 10)
         persona_generator = PersonaGenerator(ai_client=ai_client)
-        num_personas = 3  # Use a small number for testing
-        personas = persona_generator.generate_batch(num_personas)
+        
+        try:
+            personas = persona_generator.generate_batch(num_personas)
+            logger.info(f"Generated {len(personas)} personas")
+        except Exception as e:
+            logger.error(f"Error generating personas: {str(e)}")
+            raise ValueError(f"Failed to generate personas: {str(e)}")
         
         # Log generated personas
-        logger.info(f"Generated {len(personas)} personas")
         for i, persona in enumerate(personas):
             logger.debug(f"Persona {i+1}: {persona}")
+            # Log detailed persona information to the debug log
+            send_progress(evaluation_id, f"Full Persona {i+1} Details: {json.dumps(persona, indent=2)}")
         
         # Simulate website interactions
         send_progress(evaluation_id, "Simulating website interactions...", 20)
+        
+        # Ensure browser pool is initialized
+        if not browser_pool:
+            logger.error("Browser pool is not initialized")
+            raise ValueError("Browser pool is not initialized")
+            
         simulator = SimulatorBridge(use_legacy=False, browser_pool=browser_pool)
         simulation_results = []
         
         for i, persona in enumerate(personas):
             send_progress(evaluation_id, f"Simulating persona {i+1}/{len(personas)}", 20 + (i * 20 // len(personas)))
-            result = simulator.simulate(website_url, persona)
-            simulation_results.append(result)
-            logger.info(f"Completed simulation for persona {i+1}: {persona.get('name', 'Unknown')}")
+            try:
+                result = simulator.simulate(website_url, persona)
+                simulation_results.append(result)
+                logger.info(f"Completed simulation for persona {i+1}: {persona.get('name', 'Unknown')}")
+                # Log detailed simulation results to the debug log
+                send_progress(evaluation_id, f"Detailed simulation results for persona {i+1}: {json.dumps(result, default=str, indent=2)}")
+            except Exception as e:
+                logger.error(f"Error simulating persona {i+1}: {str(e)}")
+                # Create a default result with error information
+                error_result = {
+                    "website_url": website_url,
+                    "error": str(e),
+                    "persona_name": persona.get('name', 'Unknown')
+                }
+                simulation_results.append(error_result)
+                send_progress(evaluation_id, f"Error simulating persona {i+1}: {str(e)}", 20 + (i * 20 // len(personas)))
         
         # Generate reviews
         send_progress(evaluation_id, "Generating reviews...", 60)
@@ -209,13 +262,52 @@ def run_evaluation(evaluation_id: str, website_url: str):
         
         for i, (persona, simulation) in enumerate(zip(personas, simulation_results)):
             send_progress(evaluation_id, f"Generating review {i+1}/{len(personas)}", 60 + (i * 15 // len(personas)))
-            review = review_generator.generate(website_url, persona, simulation)
-            reviews.append(review)
+            try:
+                review = review_generator.generate(website_url, persona, simulation)
+                reviews.append(review)
+                # Log detailed review to the debug log
+                send_progress(evaluation_id, f"Generated review {i+1} from {persona.get('name', 'Unknown')}: {json.dumps(review, default=str, indent=2)}")
+                # Log the full text of the review for better readability
+                if isinstance(review, dict) and 'review' in review:
+                    send_progress(evaluation_id, f"Full Text of Review {i+1} from {persona.get('name', 'Unknown')}: {review.get('review', '')}")
+                elif hasattr(review, 'detailed_review'):
+                    send_progress(evaluation_id, f"Full Text of Review {i+1} from {persona.get('name', 'Unknown')}: {review.detailed_review}")
+            except Exception as e:
+                logger.error(f"Error generating review for persona {i+1}: {str(e)}")
+                # Create a default review with error information
+                error_review = {
+                    "review": f"Error generating review: {str(e)}",
+                    "rating": 0,
+                    "sentiment": "neutral",
+                    "error": str(e)
+                }
+                reviews.append(error_review)
+                send_progress(evaluation_id, f"Error generating review {i+1}: {str(e)}", 60 + (i * 15 // len(personas)))
         
         # Analyze results and generate report
         send_progress(evaluation_id, "Analyzing results and generating report...", 80)
         analyzer = ExpertAnalyzer(ai_client=ai_client)
-        report = analyzer.analyze(website_url, simulation_results, reviews)
+        
+        try:
+            report = analyzer.analyze(website_url, simulation_results, reviews)
+            # Log the detailed analysis to the debug log
+            send_progress(evaluation_id, f"Detailed Analysis Report: {json.dumps(report, default=str, indent=2)}")
+        except Exception as e:
+            logger.error(f"Error analyzing results: {str(e)}")
+            # Create a default report with error information
+            report = {
+                "website_url": website_url,
+                "error": str(e),
+                "overall_scores": {
+                    "overall": 5.0,
+                    "navigation": 5.0,
+                    "design": 5.0,
+                    "findability": 5.0
+                },
+                "key_findings": [f"Error analyzing results: {str(e)}"],
+                "recommendations": ["Try again with a different website or fewer personas"]
+            }
+            send_progress(evaluation_id, f"Error analyzing results: {str(e)}", 80)
         
         # Ensure report has all required fields for the UI
         if 'scores' not in report:
@@ -234,11 +326,15 @@ def run_evaluation(evaluation_id: str, website_url: str):
         # Convert reviews to the format expected by the UI
         formatted_reviews = []
         for review_data in reviews:
-            formatted_reviews.append({
-                'content': review_data.get('review', ''),
-                'rating': review_data.get('rating', 3),
-                'sentiment': review_data.get('sentiment', 'neutral')
-            })
+            formatted_review = {
+                'content': review_data.get('review', '') if isinstance(review_data, dict) else 
+                          (review_data.detailed_review if hasattr(review_data, 'detailed_review') else ''),
+                'rating': review_data.get('rating', 3) if isinstance(review_data, dict) else 
+                         (review_data.scores.get('overall', 3) if hasattr(review_data, 'scores') else 3),
+                'sentiment': review_data.get('sentiment', 'neutral') if isinstance(review_data, dict) else 
+                            (review_data.sentiment_scores.get('overall', 'neutral') if hasattr(review_data, 'sentiment_scores') else 'neutral')
+            }
+            formatted_reviews.append(formatted_review)
         
         final_results = {
             'website_url': website_url,
@@ -254,6 +350,7 @@ def run_evaluation(evaluation_id: str, website_url: str):
             evaluation_results[evaluation_id] = final_results
         
         send_progress(evaluation_id, "Evaluation complete!", 100)
+        logger.info(f"Evaluation {evaluation_id} completed successfully")
         
     except Exception as e:
         logger.error(f"Error in evaluation: {str(e)}\n{traceback.format_exc()}")
@@ -264,10 +361,11 @@ def run_evaluation(evaluation_id: str, website_url: str):
                 'traceback': traceback.format_exc()
             }
     finally:
-        # Clean up progress queue
+        # Ensure progress queue exists before trying to clean it up
         with evaluation_lock:
             if evaluation_id in progress_queues:
-                del progress_queues[evaluation_id]
+                # Don't delete the queue yet, it might still be needed for the client to get the final message
+                pass
 
 
 @app.route('/api/progress/<evaluation_id>')
@@ -275,8 +373,9 @@ def get_progress(evaluation_id: str):
     """Stream progress updates to the client."""
     def generate():
         if evaluation_id not in progress_queues:
+            logger.error(f"Progress queue for evaluation {evaluation_id} not found")
             yield 'data: ' + json.dumps({
-                'message': 'Evaluation not found',
+                'message': 'Evaluation not found. Please try starting a new evaluation.',
                 'percentage': 100,
                 'error': True
             }) + '\n\n'
@@ -289,29 +388,43 @@ def get_progress(evaluation_id: str):
                     results = evaluation_results[evaluation_id]
                     if 'error' in results:
                         # Error occurred during evaluation
+                        error_msg = results['error']
+                        logger.error(f"Evaluation {evaluation_id} failed: {error_msg}")
                         yield 'data: ' + json.dumps({
-                            'message': f"Error: {results['error']}", 
+                            'message': f"Error: {error_msg}", 
                             'percentage': 100,
                             'error': True
                         }) + '\n\n'
                     else:
                         # Successful completion
+                        logger.info(f"Evaluation {evaluation_id} completed successfully")
                         yield 'data: ' + json.dumps({
                             'message': 'Evaluation complete!', 
                             'percentage': 100,
                             'complete': True
                         }) + '\n\n'
+                    
+                    # Clean up progress queue after sending final message
+                    if evaluation_id in progress_queues:
+                        del progress_queues[evaluation_id]
+                    
                     break
             
             # Wait for progress
             try:
                 progress = progress_queues[evaluation_id].get(timeout=1.0)
                 yield 'data: ' + json.dumps(progress) + '\n\n'
-            except:
+            except Exception as e:
                 # Queue timeout or evaluation_id removed, check if evaluation exists
-                if evaluation_id not in progress_queues:
-                    break
-                continue
+                with evaluation_lock:
+                    if evaluation_id not in progress_queues:
+                        logger.error(f"Progress queue for evaluation {evaluation_id} was removed")
+                        yield 'data: ' + json.dumps({
+                            'message': 'Evaluation was cancelled or timed out', 
+                            'percentage': 100,
+                            'error': True
+                        }) + '\n\n'
+                        break
     
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 

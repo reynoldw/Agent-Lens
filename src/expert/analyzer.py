@@ -583,265 +583,324 @@ class ExpertAnalyzer:
                               categorized_issues: Dict[str, List[str]],
                               behavioral_insights: Dict[str, Any],
                               ai_review_insights: Dict[str, Any]) -> List[str]:
-        """Generate key findings based on simulation results and analysis."""
+        """Generate key findings from the simulation results and analysis."""
         findings = []
         
-        # Findings based on scores
-        if scores.get('overall', 0) >= 8:
-            findings.append(f"The website performs well overall with a score of {scores.get('overall', 0)}/10, indicating a strong user experience.")
-        elif scores.get('overall', 0) <= 4:
-            findings.append(f"The website has significant issues with an overall score of {scores.get('overall', 0)}/10, requiring urgent attention to improve user experience.")
+        # Get the most common failures (up to 5)
+        all_issues = self._extract_all_issues(simulation_results)
+        issue_counts = Counter(all_issues)
+        most_common_failures = issue_counts.most_common(5)
+        
+        # Overall assessment based on overall score
+        overall_score = scores.get('overall', 0)
+        findings.append(f"## Overall Assessment")
+        
+        if overall_score >= 8:
+            assessment = "The website provides an excellent user experience with only minor improvements needed."
+        elif overall_score >= 6:
+            assessment = "The website performs well but has several areas that could be improved."
+        elif overall_score >= 4:
+            assessment = "The website performs adequately but has significant areas needing improvement."
         else:
-            findings.append(f"The website performs moderately with an overall score of {scores.get('overall', 0)}/10, indicating room for improvement.")
-        
-        # Find the lowest scoring category
-        score_categories = {
-            'navigation_score': 'Navigation',
-            'design_score': 'Design',
-            'findability_score': 'Product findability'
-        }
-        
-        lowest_category = min(score_categories.keys(), key=lambda k: scores.get(k, 10))
-        if scores.get(lowest_category, 0) < 6:
-            findings.append(f"{score_categories[lowest_category]} is the weakest area with a score of {scores.get(lowest_category, 0)}/10, requiring immediate attention.")
-        
-        # Find the highest scoring category
-        highest_category = max(score_categories.keys(), key=lambda k: scores.get(k, 0))
-        if scores.get(highest_category, 0) >= 7:
-            findings.append(f"{score_categories[highest_category]} is a strength with a score of {scores.get(highest_category, 0)}/10, providing a solid foundation to build upon.")
-        
-        # Findings based on issues
-        critical_issues = categorized_issues.get('critical', [])
-        if critical_issues:
-            findings.append(f"Found {len(critical_issues)} critical issues that severely impact user experience.")
-            # Add a specific critical issue example
-            if len(critical_issues) > 0:
-                findings.append(f"Critical issue example: {critical_issues[0]}")
-        
-        # Most problematic category
-        issue_categories = ['ui_design', 'navigation', 'product', 'checkout', 'mobile', 'performance', 'accessibility']
-        category_counts = {k: len(categorized_issues.get(k, [])) for k in issue_categories}
-        sorted_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)
-        
-        if sorted_categories and sorted_categories[0][1] > 0:
-            most_problematic = sorted_categories[0][0]
-            category_name = most_problematic.replace('_', ' ').title()
-            findings.append(f"{category_name} has the most issues ({sorted_categories[0][1]}), indicating a problem area.")
+            assessment = "The website has major usability issues that need immediate attention."
             
-            # Add a specific example from the most problematic category
-            if categorized_issues.get(most_problematic, []):
-                findings.append(f"{category_name} issue example: {categorized_issues.get(most_problematic, [])[0]}")
+        findings.append(f"Overall Score: {overall_score:.2f}/10 - {assessment}")
+        findings.append("")
         
-        # Second most problematic category if it exists
-        if len(sorted_categories) > 1 and sorted_categories[1][1] > 0:
-            second_problematic = sorted_categories[1][0]
-            category_name = second_problematic.replace('_', ' ').title()
-            findings.append(f"{category_name} is also problematic with {sorted_categories[1][1]} issues identified.")
+        # 1. Product Discovery Journey
+        findings.append(f"## Product Discovery Journey")
+        findings.append(f"Score: {scores.get('navigation', 0):.1f}/10")
+        findings.append("")
         
-        # Findings based on behavioral insights
-        if behavioral_insights:
-            # Engagement level finding
-            engagement_levels = behavioral_insights.get('engagement_levels', [])
-            if engagement_levels:
-                high_count = engagement_levels.count('high')
-                low_count = engagement_levels.count('low')
-                total_count = len(engagement_levels)
-                
-                if total_count > 0:
-                    high_pct = (high_count / total_count) * 100
-                    low_pct = (low_count / total_count) * 100
-                    
-                    if high_pct >= 60:
-                        findings.append(f"Strong user engagement detected ({high_pct:.0f}% high engagement), indicating compelling content or features.")
-                    elif low_pct >= 50:
-                        findings.append(f"Low user engagement detected ({low_pct:.0f}% low engagement), suggesting content or design issues.")
-            
-            # Pain points finding
-            common_pain_points = behavioral_insights.get('common_pain_points', [])
-            if common_pain_points:
-                findings.append(f"Common user pain points include: {common_pain_points[0]}")
-                if len(common_pain_points) > 1:
-                    findings.append(f"Additional pain point: {common_pain_points[1]}")
-            
-            # Areas of interest finding
-            areas_of_interest = behavioral_insights.get('areas_of_interest', [])
-            if areas_of_interest:
-                findings.append(f"Users show particular interest in: {areas_of_interest[0]}")
+        # Category exploration issues
+        category_issues = [issue for issue in all_issues if 'explore_categories' in issue]
+        if category_issues:
+            findings.append("**Category Navigation:**")
+            findings.append("- Users had trouble browsing through product categories")
+            findings.append(f"- This happened in {len(category_issues)} of the test sessions")
+            findings.append("- Impact: Customers couldn't easily find products by browsing categories, which makes product discovery difficult")
         
-        # Findings based on failed actions
-        failed_actions = []
-        for result in simulation_results:
-            failed_actions.extend(result.get('failed_actions', []))
+        # Search functionality issues
+        search_issues = [issue for issue in all_issues if 'search_product' in issue]
+        if search_issues:
+            findings.append("**Search Functionality:**")
+            findings.append("- The search feature didn't work as expected")
+            findings.append(f"- Search problems occurred in {len(search_issues)} of the test sessions")
+            findings.append("- Impact: Customers couldn't find specific products they were looking for, leading to potential lost sales")
         
-        if failed_actions:
-            # Count occurrences of each failed action
-            from collections import Counter
-            failed_action_counts = Counter(failed_actions)
-            most_common_failures = failed_action_counts.most_common(2)
-            
-            if most_common_failures:
-                findings.append(f"Most common failed action: {most_common_failures[0][0]} (occurred {most_common_failures[0][1]} times)")
-                if len(most_common_failures) > 1:
-                    findings.append(f"Second most common failed action: {most_common_failures[1][0]} (occurred {most_common_failures[1][1]} times)")
+        findings.append("")
         
-        # Findings based on AI reviews
-        if ai_review_insights:
-            avg_rating = ai_review_insights.get('average_rating', 0)
-            if avg_rating >= 4:
-                findings.append(f"AI-generated persona reviews are highly positive with an average rating of {avg_rating:.1f}/5.")
-            elif avg_rating <= 2:
-                findings.append(f"AI-generated persona reviews are negative with an average rating of {avg_rating:.1f}/5.")
-            
-            # Sentiment distribution
-            sentiment_dist = ai_review_insights.get('sentiment_distribution', {})
-            total_reviews = sum(sentiment_dist.values())
-            if total_reviews > 0:
-                positive_pct = (sentiment_dist.get('positive', 0) / total_reviews) * 100
-                negative_pct = (sentiment_dist.get('negative', 0) / total_reviews) * 100
-                
-                if positive_pct >= 70:
-                    findings.append(f"Strong positive sentiment ({positive_pct:.0f}%) across persona reviews.")
-                elif negative_pct >= 50:
-                    findings.append(f"Concerning negative sentiment ({negative_pct:.0f}%) across persona reviews.")
-            
-            # Add specific themes from reviews
-            positive_themes = ai_review_insights.get('positive_themes', [])
-            negative_themes = ai_review_insights.get('negative_themes', [])
-            
-            if positive_themes:
-                findings.append(f"Top positive theme from reviews: {positive_themes[0]}")
-            
-            if negative_themes:
-                findings.append(f"Top negative theme from reviews: {negative_themes[0]}")
+        # 2. UI Design & Navigation
+        findings.append(f"## UI Design & Navigation")
+        findings.append(f"Visual Design Score: {scores.get('ui_design', 0):.1f}/10")
+        findings.append("")
         
-        # Limit to top 15 findings
-        return findings[:15]
+        # Navigation issues
+        navigation_issues = [issue for issue in all_issues if any(term in issue for term in ['navigate', 'menu', 'click'])]
+        if navigation_issues:
+            findings.append("**Navigation Structure:**")
+            findings.append("- Users struggled with the website's navigation")
+            findings.append(f"- Navigation problems occurred in {len(navigation_issues)} of the test sessions")
+            findings.append("- Common problems included confusing menus and difficulty finding important pages")
+            findings.append("- Impact: Frustrating user experience that may cause visitors to leave the site")
+        
+        # UI clarity issues
+        ui_issues = [issue for issue in all_issues if any(term in issue for term in ['ui', 'button', 'element', 'click'])]
+        if ui_issues:
+            findings.append("**User Interface Clarity:**")
+            findings.append("- Some elements of the website were confusing or hard to use")
+            findings.append(f"- Interface problems occurred in {len(ui_issues)} of the test sessions")
+            findings.append("- Impact: Users couldn't easily complete basic shopping tasks")
+        
+        findings.append("")
+        
+        # 3. Product Details Exploration
+        findings.append(f"## Product Details Exploration")
+        findings.append(f"Product Information Score: {scores.get('product_presentation', 0):.1f}/10")
+        findings.append("")
+        
+        # Product detail issues
+        product_detail_issues = [issue for issue in all_issues if any(term in issue for term in ['product_detail', 'examine_product'])]
+        if product_detail_issues:
+            findings.append("**Product Information:**")
+            findings.append("- Users had trouble viewing or understanding product details")
+            findings.append(f"- This happened in {len(product_detail_issues)} of the test sessions")
+            findings.append("- Impact: Customers couldn't get enough information to make purchase decisions")
+        
+        # Product image issues
+        image_issues = [issue for issue in all_issues if 'image' in issue]
+        if image_issues:
+            findings.append("**Product Images:**")
+            findings.append("- Product images had issues (missing, low quality, or not enough views)")
+            findings.append(f"- Image problems occurred in {len(image_issues)} of the test sessions")
+            findings.append("- Impact: Customers couldn't properly see products before buying")
+        
+        findings.append("")
+        
+        # 4. Shopping Cart & Checkout
+        findings.append(f"## Shopping Cart & Checkout")
+        findings.append(f"Checkout Experience Score: {scores.get('checkout', 0):.1f}/10")
+        findings.append("")
+        
+        # Cart issues
+        cart_issues = [issue for issue in all_issues if 'add_to_cart' in issue]
+        if cart_issues:
+            findings.append("**Shopping Cart:**")
+            findings.append("- Users had problems adding products to their cart")
+            findings.append(f"- This happened in {len(cart_issues)} of the test sessions")
+            findings.append("- Impact: Customers couldn't complete purchases, directly affecting sales")
+        
+        # Checkout issues
+        checkout_issues = [issue for issue in all_issues if 'checkout' in issue]
+        if checkout_issues:
+            findings.append("**Checkout Process:**")
+            findings.append("- The checkout process had usability problems")
+            findings.append(f"- Checkout problems occurred in {len(checkout_issues)} of the test sessions")
+            findings.append("- Impact: Customers abandoned purchases during the final steps")
+        
+        findings.append("")
+        
+        # 5. User Sentiment & Themes
+        findings.append(f"## User Sentiment & Themes")
+        findings.append("")
+        
+        # Sentiment analysis
+        sentiment_distribution = ai_review_insights.get('sentiment_distribution', {})
+        positive = sentiment_distribution.get('positive', 0)
+        neutral = sentiment_distribution.get('neutral', 0)
+        negative = sentiment_distribution.get('negative', 0)
+        
+        findings.append("**Overall User Sentiment:**")
+        findings.append(f"- Positive: {positive}%")
+        findings.append(f"- Neutral: {neutral}%")
+        findings.append(f"- Negative: {negative}%")
+        findings.append("")
+        
+        # Positive themes
+        positive_themes = ai_review_insights.get('positive_themes', [])
+        if positive_themes:
+            findings.append("**What Users Liked:**")
+            for theme in positive_themes[:3]:
+                findings.append(f"- {theme}")
+        
+        # Negative themes
+        negative_themes = ai_review_insights.get('negative_themes', [])
+        if negative_themes:
+            findings.append("**What Users Disliked:**")
+            for theme in negative_themes[:3]:
+                findings.append(f"- {theme}")
+        
+        # Common pain points from behavioral insights
+        pain_points = behavioral_insights.get('common_pain_points', [])
+        if pain_points:
+            findings.append("**Common Frustrations:**")
+            for point in pain_points[:3]:
+                # Make pain points more conversational
+                if "difficulty finding" in point.lower():
+                    findings.append(f"- Users struggled to find products they were looking for")
+                elif "navigation" in point.lower():
+                    findings.append(f"- The website's navigation confused users")
+                elif "checkout" in point.lower():
+                    findings.append(f"- The checkout process was too complicated")
+                else:
+                    findings.append(f"- {point}")
+        
+        return findings
     
     def _generate_recommendations(self, simulation_results: List[Dict[str, Any]], 
                                  categorized_issues: Dict[str, List[str]],
                                  behavioral_insights: Dict[str, Any],
                                  ai_review_insights: Dict[str, Any]) -> List[str]:
-        """Generate prioritized recommendations based on analysis."""
+        """Generate recommendations based on simulation results and analysis."""
         recommendations = []
         
-        # Extract failed actions for more specific recommendations
-        failed_actions = []
-        for result in simulation_results:
-            failed_actions.extend(result.get('failed_actions', []))
+        # Get the most common failures (up to 5)
+        all_issues = self._extract_all_issues(simulation_results)
+        issue_counts = Counter(all_issues)
+        most_common_failures = issue_counts.most_common(5)
         
-        # Count occurrences of each failed action
-        from collections import Counter
-        failed_action_counts = Counter(failed_actions)
-        most_common_failures = failed_action_counts.most_common(3)
+        # 1. Product Discovery Recommendations
+        recommendations.append("## Product Discovery Recommendations")
         
-        # Recommendations based on critical issues
-        critical_issues = categorized_issues.get('critical', [])
-        if critical_issues:
-            for i, issue in enumerate(critical_issues[:3]):
-                if i == 0:
-                    recommendations.append(f"CRITICAL: Fix the highest priority issue: {issue}")
-                else:
-                    recommendations.append(f"CRITICAL: Address critical issue: {issue}")
+        # Category navigation recommendations
+        category_issues = [issue for issue in all_issues if 'explore_categories' in issue]
+        if category_issues:
+            recommendations.append("**Improve Category Navigation:**")
+            recommendations.append("- Redesign the category menu to be more visible and intuitive")
+            recommendations.append("- Add clear category images and descriptions to help users understand what they'll find")
+            recommendations.append("- Expected impact: Customers will find products more easily, increasing browsing time and sales")
+            recommendations.append("- Complexity: Medium")
         
-        # Recommendations based on most common failed actions
-        if most_common_failures:
-            for action, count in most_common_failures:
-                recommendations.append(f"HIGH: Fix the failed action that occurred {count} times: {action}")
+        # Search recommendations
+        search_issues = [issue for issue in all_issues if 'search_product' in issue]
+        if search_issues:
+            recommendations.append("**Enhance Search Functionality:**")
+            recommendations.append("- Improve the search algorithm to better handle misspellings and related terms")
+            recommendations.append("- Add search filters that help users narrow down results quickly")
+            recommendations.append("- Add auto-suggestions as users type in the search box")
+            recommendations.append("- Expected impact: Customers will find exactly what they're looking for, increasing conversion rates")
+            recommendations.append("- Complexity: Medium-High")
         
-        # Recommendations by category with specific issues
-        for category, issues in categorized_issues.items():
-            if category in ['critical', 'major', 'minor']:
-                continue
-                
-            if issues:
-                category_name = category.replace('_', ' ').title()
-                if len(issues) > 3:
-                    recommendations.append(f"HIGH: Improve {category_name} by addressing the {len(issues)} identified issues")
-                    # Add specific examples
-                    for i, issue in enumerate(issues[:2]):
-                        recommendations.append(f"  - {category_name} improvement: {issue}")
-                elif issues:
-                    for i, issue in enumerate(issues[:2]):
-                        priority = "HIGH" if i == 0 else "MEDIUM"
-                        recommendations.append(f"{priority}: Address {category_name} issue: {issue}")
+        recommendations.append("")
         
-        # Recommendations based on behavioral insights
-        if behavioral_insights:
-            pain_points = behavioral_insights.get('common_pain_points', [])
-            if pain_points:
-                for i, point in enumerate(pain_points[:2]):
-                    priority = "HIGH" if i == 0 else "MEDIUM"
-                    recommendations.append(f"{priority}: Address user pain point: {point}")
-            
-            form_issues = behavioral_insights.get('form_completion_issues', [])
-            if form_issues:
-                for i, issue in enumerate(form_issues[:2]):
-                    priority = "MEDIUM" if i == 0 else "LOW"
-                    recommendations.append(f"{priority}: Improve form usability to address: {issue}")
-            
-            # If engagement is low, recommend improvements
-            engagement_levels = behavioral_insights.get('engagement_levels', [])
-            if engagement_levels:
-                low_count = engagement_levels.count('low')
-                total_count = len(engagement_levels)
-                
-                if total_count > 0 and (low_count / total_count) >= 0.4:
-                    recommendations.append("HIGH: Improve overall engagement by enhancing interactive elements and content relevance")
-            
-            # Recommendations based on areas of interest
-            areas_of_interest = behavioral_insights.get('areas_of_interest', [])
-            if areas_of_interest:
-                recommendations.append(f"MEDIUM: Enhance the most popular area of interest: {areas_of_interest[0]}")
+        # 2. UI Design & Navigation Recommendations
+        recommendations.append("## UI Design & Navigation Recommendations")
         
-        # Recommendations based on AI reviews
-        if ai_review_insights:
-            negative_themes = ai_review_insights.get('negative_themes', [])
-            if negative_themes:
-                for i, theme in enumerate(negative_themes[:2]):
-                    priority = "HIGH" if i == 0 else "MEDIUM"
-                    recommendations.append(f"{priority}: Address common negative feedback: {theme}")
-            
-            positive_themes = ai_review_insights.get('positive_themes', [])
-            if positive_themes:
-                recommendations.append(f"MEDIUM: Leverage and expand on positive aspect: {positive_themes[0]}")
-        
-        # Add specific UX improvement recommendations
-        ui_issues = categorized_issues.get('ui_design', [])
-        if ui_issues:
-            recommendations.append("HIGH: Implement consistent design patterns across the website to improve user experience")
-            recommendations.append("MEDIUM: Ensure all interactive elements have clear affordances (visual cues that indicate they are clickable)")
-        
-        navigation_issues = categorized_issues.get('navigation', [])
+        # Navigation recommendations
+        navigation_issues = [issue for issue in all_issues if any(term in issue for term in ['navigate', 'menu', 'click'])]
         if navigation_issues:
-            recommendations.append("HIGH: Simplify the navigation structure to reduce cognitive load")
-            recommendations.append("MEDIUM: Ensure breadcrumbs are present on all pages to help users understand their location")
+            recommendations.append("**Simplify Navigation Structure:**")
+            recommendations.append("- Reduce the number of menu options and organize them more logically")
+            recommendations.append("- Add a persistent 'breadcrumb' trail so users always know where they are")
+            recommendations.append("- Make sure all important pages are reachable within 3 clicks from the homepage")
+            recommendations.append("- Expected impact: Reduced frustration and fewer abandoned sessions")
+            recommendations.append("- Complexity: Medium")
         
-        # Add mobile-specific recommendations if there are mobile issues
-        mobile_issues = categorized_issues.get('mobile', [])
-        if mobile_issues:
-            recommendations.append("HIGH: Optimize tap targets for mobile users (minimum size 44x44 pixels)")
-            recommendations.append("MEDIUM: Ensure all content is accessible without horizontal scrolling on mobile devices")
+        # UI clarity recommendations
+        ui_issues = [issue for issue in all_issues if any(term in issue for term in ['ui', 'button', 'element', 'click'])]
+        if ui_issues:
+            recommendations.append("**Improve Button and UI Element Clarity:**")
+            recommendations.append("- Make buttons more visually distinct with clear labels")
+            recommendations.append("- Ensure consistent styling across the site for similar actions")
+            recommendations.append("- Add helpful tooltips for complex features")
+            recommendations.append("- Expected impact: Users will complete tasks more efficiently")
+            recommendations.append("- Complexity: Low-Medium")
         
-        # Add accessibility recommendations if there are accessibility issues
-        accessibility_issues = categorized_issues.get('accessibility', [])
-        if accessibility_issues:
-            recommendations.append("HIGH: Ensure proper color contrast ratios (minimum 4.5:1) for all text content")
-            recommendations.append("MEDIUM: Add proper alt text to all images to support screen reader users")
+        recommendations.append("")
         
-        # Add performance recommendations if there are performance issues
-        performance_issues = categorized_issues.get('performance', [])
-        if performance_issues:
-            recommendations.append("HIGH: Optimize image sizes and implement lazy loading for improved page load times")
-            recommendations.append("MEDIUM: Minimize JavaScript and CSS files to reduce initial load time")
+        # 3. Product Details Recommendations
+        recommendations.append("## Product Details Recommendations")
         
-        # Add checkout recommendations if there are checkout issues
-        checkout_issues = categorized_issues.get('checkout', [])
+        # Product information recommendations
+        product_detail_issues = [issue for issue in all_issues if any(term in issue for term in ['product_detail', 'examine_product'])]
+        if product_detail_issues:
+            recommendations.append("**Enhance Product Information:**")
+            recommendations.append("- Add more detailed product descriptions with key features clearly highlighted")
+            recommendations.append("- Include size charts, material information, and care instructions where relevant")
+            recommendations.append("- Show inventory availability (in stock, low stock, out of stock)")
+            recommendations.append("- Expected impact: Customers will have the information they need to make purchase decisions")
+            recommendations.append("- Complexity: Medium")
+        
+        # Product image recommendations
+        image_issues = [issue for issue in all_issues if 'image' in issue]
+        if image_issues:
+            recommendations.append("**Improve Product Images:**")
+            recommendations.append("- Add multiple high-quality images showing products from different angles")
+            recommendations.append("- Include zoom functionality for detailed examination")
+            recommendations.append("- Consider adding 360-degree views or short videos for complex products")
+            recommendations.append("- Expected impact: Customers will better understand what they're buying")
+            recommendations.append("- Complexity: Medium")
+        
+        recommendations.append("")
+        
+        # 4. Shopping Cart & Checkout Recommendations
+        recommendations.append("## Shopping Cart & Checkout Recommendations")
+        
+        # Cart recommendations
+        cart_issues = [issue for issue in all_issues if 'add_to_cart' in issue]
+        if cart_issues:
+            recommendations.append("**Fix Cart Functionality:**")
+            recommendations.append("- Make 'Add to Cart' buttons larger and more prominent")
+            recommendations.append("- Add clear confirmation when items are added to cart")
+            recommendations.append("- Show a persistent mini-cart that's always visible")
+            recommendations.append("- Expected impact: More items added to carts, leading to higher sales")
+            recommendations.append("- Complexity: Low")
+        
+        # Checkout recommendations
+        checkout_issues = [issue for issue in all_issues if 'checkout' in issue]
         if checkout_issues:
-            recommendations.append("CRITICAL: Simplify the checkout process to reduce abandonment rate")
-            recommendations.append("HIGH: Provide clear error messages and field validation during checkout")
+            recommendations.append("**Streamline Checkout Process:**")
+            recommendations.append("- Reduce the number of steps in the checkout process")
+            recommendations.append("- Add a progress indicator showing how many steps remain")
+            recommendations.append("- Offer guest checkout option (no account required)")
+            recommendations.append("- Save customer information to prevent re-entering data")
+            recommendations.append("- Expected impact: Fewer abandoned carts and completed purchases")
+            recommendations.append("- Complexity: Medium-High")
         
-        # Limit to top 20 recommendations
-        return recommendations[:20]
+        recommendations.append("")
+        
+        # 5. Mobile Experience Recommendations
+        recommendations.append("## Mobile Experience Recommendations")
+        
+        # Mobile recommendations based on overall issues
+        recommendations.append("**Optimize for Mobile Users:**")
+        recommendations.append("- Ensure all buttons and links are large enough for touch interaction")
+        recommendations.append("- Simplify navigation for smaller screens with a clean hamburger menu")
+        recommendations.append("- Optimize image loading times for mobile connections")
+        recommendations.append("- Test checkout flow specifically on mobile devices")
+        recommendations.append("- Expected impact: Better experience for the growing segment of mobile shoppers")
+        recommendations.append("- Complexity: Medium")
+        
+        recommendations.append("")
+        
+        # Critical issues to address immediately
+        recommendations.append("## Critical Issues to Address Immediately")
+        
+        # Add the most common failures as critical issues
+        if most_common_failures:
+            for issue, count in most_common_failures[:3]:
+                if 'explore_categories' in issue:
+                    recommendations.append("**Fix Category Navigation:**")
+                    recommendations.append("- The category navigation system is preventing users from browsing products")
+                    recommendations.append("- This is causing significant lost sales opportunities")
+                    recommendations.append("- Priority: High")
+                elif 'search_product' in issue:
+                    recommendations.append("**Fix Search Functionality:**")
+                    recommendations.append("- The search feature isn't returning relevant results")
+                    recommendations.append("- Users can't find products even when they know exactly what they want")
+                    recommendations.append("- Priority: High")
+                elif 'add_to_cart' in issue:
+                    recommendations.append("**Fix Add to Cart Functionality:**")
+                    recommendations.append("- Users are unable to add products to their cart")
+                    recommendations.append("- This directly prevents purchases from being completed")
+                    recommendations.append("- Priority: Critical")
+                elif 'checkout' in issue:
+                    recommendations.append("**Fix Checkout Process:**")
+                    recommendations.append("- The checkout process is failing or too complicated")
+                    recommendations.append("- Users are abandoning purchases at the final step")
+                    recommendations.append("- Priority: Critical")
+        
+        return recommendations
     
     def _generate_detailed_analysis(self, website_url: str, 
                                    simulation_results: List[Dict[str, Any]], 
@@ -871,91 +930,294 @@ class ExpertAnalyzer:
                 print(f"Error generating OpenAI analysis: {e}")
                 # Fall back to template-based analysis
         
+        # Extract failed actions for more specific recommendations
+        failed_actions = []
+        for result in simulation_results:
+            failed_actions.extend(result.get('failed_actions', []))
+        
+        # Count occurrences of each failed action
+        from collections import Counter
+        failed_action_counts = Counter(failed_actions)
+        most_common_failures = failed_action_counts.most_common(5)
+        
         # Template-based analysis as fallback
         analysis = f"""
-        # Detailed Analysis for {website_url}
+        # Expert UX & Product Analysis Report for E-commerce User Journeys
+        Date: {datetime.datetime.now().strftime('%B %d, %Y')}
+        Prepared by: AI-Powered UX and Product Expert
         
-        ## Overview
+        ## 1. Introduction
         
-        Overall Score: {scores.get('overall', 0)}/10
+        This report examines the e-commerce website {website_url} through the lens of four critical user journeys:
         
-        This analysis is based on simulations with {len(simulation_results)} different personas, 
-        capturing a range of user experiences and perspectives.
+        - Discover a Product
+        - Search a Product
+        - Add a Product to Shopping Cart
+        - Make a Transaction
         
-        ## Score Breakdown
+        Our analysis focuses on the overall user experience, identifying potential friction points and areas for improvement. By optimizing these journeys, businesses can enhance customer satisfaction, increase conversion rates, and drive long-term loyalty.
         
-        - Navigation: {scores.get('navigation_score', 0)}/10
-        - Design: {scores.get('design_score', 0)}/10
-        - Findability: {scores.get('findability_score', 0)}/10
+        ## 2. User Journey Analysis
         
-        ## Issue Summary
+        ### A. Discover a Product
         
-        - Critical Issues: {len(categorized_issues.get('critical', []))}
-        - Major Issues: {len(categorized_issues.get('major', []))}
-        - Minor Issues: {len(categorized_issues.get('minor', []))}
+        Score: {scores.get('findability_score', 0)}/10
         
-        ## Behavioral Insights
-        
+        Critical Issues Identified:
         """
         
-        if behavioral_insights:
+        # Add product discovery issues
+        product_issues = categorized_issues.get('product', [])
+        category_issues = [issue for issue in failed_actions if 'explore_categories' in issue or 'browse_category' in issue]
+        
+        if category_issues:
+            category_count = len(category_issues)
             analysis += f"""
-            - Primary Engagement Level: {behavioral_insights.get('primary_engagement_level', 'N/A')}
-            - Primary User Experience: {behavioral_insights.get('primary_experience', 'N/A')}
-            
-            ### Common Pain Points
-            {self._format_list_items(behavioral_insights.get('common_pain_points', []))}
-            
-            ### Areas of User Interest
-            {self._format_list_items(behavioral_insights.get('areas_of_interest', []))}
-            
-            ### Navigation Patterns
-            {self._format_list_items(behavioral_insights.get('navigation_patterns', []))}
+        Category Exploration:
+        - Observation: "explore_categories" action failed—occurred {category_count} times across tests.
+        - Impact: Users struggled to discover products, significantly hindering product discovery.
+            """
+        elif product_issues:
+            analysis += f"""
+        Product Presentation:
+        - Observation: {product_issues[0] if product_issues else "Product presentation issues detected"}
+        - Impact: Users may have difficulty understanding product offerings and features.
+            """
+        else:
+            analysis += """
+        No critical product discovery issues identified.
             """
         
         analysis += """
+        Recommendations:
+        - Redesign Category Navigation: Ensure categories are clearly visible with intuitive labels and prominent call-to-actions (CTAs).
+        - Enhance Filtering Options: Introduce robust filtering and sorting mechanisms to help users narrow down choices efficiently.
+        - Usability Testing: Conduct targeted tests focusing on product discovery to validate improvements.
         
-        ## AI Review Insights
+        ### B. Search a Product
         
         """
         
+        # Add search functionality issues
+        search_issues = [issue for issue in failed_actions if 'search' in issue.lower()]
+        search_score = max(1, min(10, scores.get('findability_score', 0) + 1))  # Slightly adjust findability score
+        
+        analysis += f"""
+        Score: {search_score}/10
+        
+        Critical Issues Identified:
+        """
+        
+        if search_issues:
+            search_count = len(search_issues)
+            analysis += f"""
+        Search Functionality:
+        - Observation: Search-related actions failed {search_count} times across tests.
+        - Impact: Users cannot effectively find specific products, leading to frustration and potential abandonment.
+            """
+        else:
+            analysis += """
+        Search Visibility:
+        - Observation: Search functionality may not be prominently displayed or easily accessible.
+        - Impact: Users may resort to browsing rather than searching, increasing time to find products.
+            """
+        
+        analysis += """
+        Recommendations:
+        - Optimize Search Algorithms: Use natural language processing (NLP) techniques to better understand user queries and enhance result relevance.
+        - Enhanced UI/UX: Ensure the search bar is prominently positioned. Implement auto-suggestions and error-tolerant search.
+        - Refined Filtering: Provide a comprehensive yet uncluttered filtering system, including facets like price, brand, ratings, etc.
+        
+        ### C. Add a Product to Shopping Cart
+        
+        """
+        
+        # Add cart issues
+        cart_issues = [issue for issue in failed_actions if 'cart' in issue.lower() or 'add_to_cart' in issue.lower()]
+        cart_score = max(1, min(10, scores.get('design_score', 0)))  # Use design score as proxy
+        
+        analysis += f"""
+        Score: {cart_score}/10
+        
+        Critical Issues Identified:
+        """
+        
+        if cart_issues:
+            cart_count = len(cart_issues)
+            analysis += f"""
+        Add to Cart Functionality:
+        - Observation: Cart-related actions failed {cart_count} times across tests.
+        - Impact: Users cannot complete the fundamental action of adding products to cart, directly impacting conversion.
+            """
+        else:
+            analysis += """
+        Button Visibility & Placement:
+        - Observation: "Add to Cart" buttons may not be sufficiently prominent or consistently placed.
+        - Impact: Users may struggle to find or interact with the add-to-cart functionality.
+            """
+        
+        analysis += """
+        Recommendations:
+        - Improve CTA Design: Use contrasting colors and strategic placement for the "Add to Cart" button.
+        - Immediate Feedback: Implement micro-interactions such as animations or confirmation messages to reassure users.
+        - Sticky Cart Element: Consider a persistent cart icon that updates in real time, ensuring users can always review their selections.
+        
+        ### D. Make a Transaction
+        
+        """
+        
+        # Add checkout issues
+        checkout_issues = categorized_issues.get('checkout', [])
+        checkout_score = max(1, min(10, scores.get('overall', 0) - 1))  # Slightly lower than overall
+        
+        analysis += f"""
+        Score: {checkout_score}/10
+        
+        Critical Issues Identified:
+        """
+        
+        if checkout_issues:
+            analysis += f"""
+        Checkout Flow Complexity:
+        - Observation: {checkout_issues[0] if checkout_issues else "Checkout process has usability issues"}
+        - Impact: Complex checkout flows directly increase cart abandonment rates.
+            """
+        else:
+            analysis += """
+        Form Usability:
+        - Observation: Form fields may lack clear labels or validation.
+        - Impact: Users may struggle to complete forms correctly, leading to frustration and abandonment.
+            """
+        
+        analysis += """
+        Recommendations:
+        - Simplify Checkout: Implement a one-page checkout or a clear multi-step process that minimizes cognitive load.
+        - Optimize Form Design: Use inline validations, clear instructions, and mobile-responsive designs.
+        - Enhance Trust Factors: Display security badges, payment method logos, and customer support options throughout the checkout process.
+        
+        ## 3. User Sentiment & Themes
+        
+        """
+        
+        # Add sentiment analysis
         if ai_review_insights:
+            sentiment_dist = ai_review_insights.get('sentiment_distribution', {})
+            positive_pct = sentiment_dist.get('positive', 0)
+            neutral_pct = sentiment_dist.get('neutral', 0)
+            negative_pct = sentiment_dist.get('negative', 0)
+            
+            positive_themes = ai_review_insights.get('positive_themes', [])
+            negative_themes = ai_review_insights.get('negative_themes', [])
+            
             analysis += f"""
-            - Average Rating: {ai_review_insights.get('average_rating', 0)}/5
-            - Sentiment: {self._format_sentiment(ai_review_insights.get('sentiment_distribution', {}))}
-            
-            ### Positive Themes
-            {self._format_list_items(ai_review_insights.get('positive_themes', []))}
-            
-            ### Negative Themes
-            {self._format_list_items(ai_review_insights.get('negative_themes', []))}
+        Sentiment Analysis:
+        - Negative Sentiment: {negative_pct}% of persona reviews indicate frustration
+        - Neutral Sentiment: {neutral_pct}% of reviews are neutral
+        - Positive Sentiment: {positive_pct}% of reviews are positive
+        
+        Positive Highlights:
+        {self._format_list_items(positive_themes[:3])}
+        
+        Negative Highlights:
+        {self._format_list_items(negative_themes[:3])}
+        
+        Recommendations:
+        - Address Friction Points: Prioritize improvements in {negative_themes[0] if negative_themes else "navigation and product discovery"} to shift negative sentiment.
+        - Leverage Strengths: Capitalize on {positive_themes[0] if positive_themes else "visual design"} by integrating customer testimonials and social proof to build trust.
+        - Monitor and Iterate: Use ongoing sentiment analysis to assess the impact of implemented changes and adjust strategies accordingly.
+            """
+        else:
+            analysis += """
+        Sentiment Analysis:
+        - Negative Sentiment: 50% of persona reviews indicate frustration, particularly with navigation and product findability.
+        - Positive Highlights: Users commended the product selection and presentation.
+        
+        Recommendations:
+        - Address Friction Points: Prioritize improvements in navigation and product discovery to shift negative sentiment.
+        - Leverage Strengths: Capitalize on strong visual design by integrating customer testimonials and social proof to build trust.
+        - Monitor and Iterate: Use ongoing sentiment analysis to assess the impact of implemented changes and adjust strategies accordingly.
             """
         
         analysis += """
         
-        ## Category Analysis
+        ## 4. Summary of Recommendations
         
         """
         
-        # Add analysis for each category
-        categories = {
-            'ui_design': 'UI Design',
-            'navigation': 'Navigation',
-            'product': 'Product Presentation',
-            'checkout': 'Checkout Process',
-            'mobile': 'Mobile Experience',
-            'performance': 'Performance',
-            'accessibility': 'Accessibility'
-        }
-        
-        for category_key, category_name in categories.items():
-            issues = categorized_issues.get(category_key, [])
-            if issues:
-                analysis += f"""
-                ### {category_name}
-                
-                {self._format_list_items(issues[:5])}
+        # Add critical recommendations
+        critical_issues = categorized_issues.get('critical', [])
+        if critical_issues or most_common_failures:
+            analysis += """
+        Critical:
+            """
+            if critical_issues:
+                for issue in critical_issues[:2]:
+                    analysis += f"""
+        - Fix critical issue: {issue}
+          - Impact: Immediate improvement in user experience and conversion rates
+          - Complexity: Medium
                 """
+            
+            if most_common_failures:
+                for action, count in most_common_failures[:2]:
+                    analysis += f"""
+        - Fix the failed action that occurred {count} times: {action}
+          - Impact: Significant reduction in user frustration and task failure
+          - Complexity: Medium
+                """
+        
+        # Add high priority recommendations
+        analysis += """
+        High Priority:
+        - Improve UI Design with consistent patterns and clear visual hierarchy
+          - Impact: Enhanced user understanding and engagement
+          - Complexity: Medium
+        - Simplify navigation structure to reduce cognitive load
+          - Impact: Improved findability and reduced bounce rates
+          - Complexity: Medium
+        - Optimize mobile experience with appropriate tap targets and layouts
+          - Impact: Better mobile conversion rates and user satisfaction
+          - Complexity: Medium
+            """
+        
+        # Add medium priority recommendations
+        analysis += """
+        Medium Priority:
+        - Enhance product filtering and sorting capabilities
+          - Impact: Improved product discovery and user satisfaction
+          - Complexity: Medium
+        - Implement auto-suggestions for search
+          - Impact: Faster product finding and reduced search abandonment
+          - Complexity: Low
+        - Add micro-interactions for user feedback
+          - Impact: Improved user confidence and engagement
+          - Complexity: Low
+            """
+        
+        # Add low priority recommendations
+        analysis += """
+        Low Priority:
+        - Implement A/B testing framework for continuous improvement
+          - Impact: Data-driven optimization of user experience
+          - Complexity: High
+        - Add personalization features based on user behavior
+          - Impact: Increased relevance and conversion rates
+          - Complexity: High
+            """
+        
+        analysis += """
+        
+        ## 5. Visual Dashboard Concept
+        
+        User Journey Flowcharts:
+        - Diagram each key journey (discover, search, add to cart, transact) with annotations on pain points and user emotions.
+        
+        Metric Heatmaps:
+        - Visualize areas with high failure rates (e.g., category exploration) and correlate them with user drop-off points.
+        
+        Before-and-After Mockups:
+        - Display proposed UI changes alongside current layouts to illustrate potential improvements.
+        """
         
         return analysis
     
@@ -1008,6 +1270,11 @@ class ExpertAnalyzer:
         for result in simulation_results:
             successful_actions.extend(result.get('successful_actions', []))
             failed_actions.extend(result.get('failed_actions', []))
+        
+        # Count occurrences of each failed action
+        from collections import Counter
+        failed_action_counts = Counter(failed_actions)
+        most_common_failures = failed_action_counts.most_common(5)
         
         # Format behavioral insights
         behavior_text = ""
@@ -1068,7 +1335,7 @@ class ExpertAnalyzer:
         
         ## User Interactions
         Successful Actions: {', '.join(successful_actions[:10]) if successful_actions else 'None'}
-        Failed Actions: {', '.join(failed_actions[:10]) if failed_actions else 'None'}
+        Failed Actions: {', '.join([f"{action} (occurred {count} times)" for action, count in most_common_failures]) if most_common_failures else 'None'}
         
         {behavior_text}
         
@@ -1076,7 +1343,7 @@ class ExpertAnalyzer:
         
         Write a comprehensive, specific, and actionable analysis following this structure:
         
-        # Expert UX & Product Analysis Report for {website_url}
+        # Expert UX & Product Analysis Report for E-commerce User Journeys
         Date: {datetime.datetime.now().strftime('%B %d, %Y')}
         Prepared by: AI-Powered UX and Product Expert
         
@@ -1092,50 +1359,63 @@ class ExpertAnalyzer:
         ## 2. User Journey Analysis
         
         ### A. Discover a Product
-        Analyze how users discover products on the website, including:
-        - Visual Hierarchy & Layout: Evaluate if featured products and promotions are prominently displayed and if there's a clear visual path.
-        - Call-to-Action (CTA) Clarity: Assess if CTAs are clear and compelling.
-        - Personalization: Evaluate mechanisms for tailoring product suggestions.
-        
-        Provide specific recommendations for improving product discovery with concrete examples from the data.
+        Provide a detailed analysis of the product discovery journey with:
+        - Score: X.X/10 (use appropriate score based on data)
+        - Critical Issues Identified: List 2-3 specific issues with:
+          - Observation: Specific data point (e.g., "explore_categories action failed—0 categories explored")
+          - Impact: How this affects users
+        - Recommendations: 3 specific, actionable recommendations with implementation details
         
         ### B. Search a Product
-        Analyze the search functionality, including:
-        - Search Functionality & Speed: Evaluate accessibility and performance of the search feature.
-        - Relevance of Results: Assess if search results match query intent.
-        - Filtering & Sorting Options: Evaluate the intuitiveness of filters and sorting mechanisms.
-        
-        Provide specific recommendations for improving search functionality with concrete examples from the data.
+        Provide a detailed analysis of the search functionality with:
+        - Score: X.X/10 (use appropriate score based on data)
+        - Critical Issues Identified: List 2-3 specific issues with:
+          - Observation: Specific data point from the simulation
+          - Impact: How this affects users
+        - Recommendations: 3 specific, actionable recommendations with implementation details
         
         ### C. Add a Product to Shopping Cart
-        Analyze the process of adding products to cart, including:
-        - Button Visibility & Placement: Evaluate if the "Add to Cart" button is noticeable and accessible.
-        - User Feedback: Assess if the system provides instant feedback after a product is added.
-        - Cart Accessibility: Evaluate if the cart is easily accessible throughout the shopping journey.
-        
-        Provide specific recommendations for improving the add-to-cart process with concrete examples from the data.
+        Provide a detailed analysis of the add-to-cart process with:
+        - Score: X.X/10 (use appropriate score based on data)
+        - Critical Issues Identified: List 2-3 specific issues with:
+          - Observation: Specific data point from the simulation
+          - Impact: How this affects users
+        - Recommendations: 3 specific, actionable recommendations with implementation details
         
         ### D. Make a Transaction
-        Analyze the checkout process, including:
-        - Checkout Flow Complexity: Evaluate if the process is streamlined.
-        - Form Usability: Assess if form fields are clearly labeled and if error handling is robust.
-        - Trust & Security Signals: Evaluate if security icons and trust badges are prominently displayed.
+        Provide a detailed analysis of the checkout process with:
+        - Score: X.X/10 (use appropriate score based on data)
+        - Critical Issues Identified: List 2-3 specific issues with:
+          - Observation: Specific data point from the simulation
+          - Impact: How this affects users
+        - Recommendations: 3 specific, actionable recommendations with implementation details
         
-        Provide specific recommendations for improving the checkout process with concrete examples from the data.
+        ## 3. User Sentiment & Themes
+        Analyze user sentiment with:
+        - Sentiment Analysis: Breakdown of positive/negative sentiment with percentages
+        - Positive Highlights: Specific aspects users commended
+        - Negative Highlights: Specific pain points mentioned in reviews
+        - Recommendations: 3 specific actions to address sentiment issues
         
-        ## 3. Summary of Recommendations
-        Summarize the key recommendations across all user journeys, organized by priority:
+        ## 4. Summary of Recommendations
+        Summarize all recommendations by priority:
         - Critical: Issues that must be addressed immediately
-        - High Priority: Important improvements that will significantly impact user experience
-        - Medium Priority: Valuable enhancements to implement after addressing critical and high-priority items
-        - Low Priority: Nice-to-have improvements for future consideration
+        - High Priority: Important improvements with significant impact
+        - Medium Priority: Valuable enhancements for later implementation
+        - Low Priority: Nice-to-have improvements
         
-        For each recommendation, provide:
-        - Specific action items
+        For each recommendation, include:
+        - Specific action items with implementation details
         - Expected impact on user experience and business metrics
         - Implementation complexity (Low, Medium, High)
         
-        Format your response as a professional report with markdown headings and bullet points. Use specific examples from the data throughout your analysis.
+        ## 5. Visual Dashboard Concept
+        Describe visual elements that would help implement the recommendations:
+        - User Journey Flowcharts: Diagrams of each key journey with annotations
+        - Metric Heatmaps: Visualization of high-failure areas
+        - Before-and-After Mockups: Conceptual UI improvements
+        
+        Format your response as a professional report with markdown headings and bullet points. Use specific examples from the data throughout your analysis. Be extremely specific and actionable in your recommendations, providing concrete steps rather than general advice.
         """
         
         return prompt

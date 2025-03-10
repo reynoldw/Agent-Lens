@@ -245,7 +245,17 @@ class ReviewGenerator:
             rating = min(5, rating + 1)
         elif sentiment == "negative" and rating > 2:
             rating = max(1, rating - 1)
-            
+        
+        # Extract persona information
+        persona_name = persona.get('name', 'Anonymous User')
+        persona_age = persona.get('demographics', {}).get('age', 35)
+        persona_gender = persona.get('demographics', {}).get('gender', 'Unknown')
+        persona_occupation = persona.get('demographics', {}).get('occupation', 'Professional')
+        persona_tech_level = persona.get('technical', {}).get('tech_proficiency', 'moderate')
+        persona_shopping_frequency = persona.get('shopping_behavior', {}).get('online_shopping_frequency', 'occasionally')
+        persona_price_sensitivity = persona.get('shopping_behavior', {}).get('price_sensitivity', 'moderate')
+        persona_preferred_categories = persona.get('shopping_behavior', {}).get('preferred_categories', [])
+        
         # Generate review content based on scores and actions
         positive_phrases = [
             "I found the website easy to navigate",
@@ -253,7 +263,11 @@ class ReviewGenerator:
             "Product information was clear and helpful",
             "The checkout process was straightforward",
             "I liked how the products were categorized",
-            "The search functionality worked well"
+            "The search functionality worked well",
+            "The website loaded quickly on my device",
+            "The product images were high quality and showed good detail",
+            "I appreciated the customer reviews for products",
+            "The filtering options made it easy to find what I wanted"
         ]
         
         negative_phrases = [
@@ -262,7 +276,11 @@ class ReviewGenerator:
             "Product information was lacking",
             "The checkout process was confusing",
             "The categorization of products wasn't intuitive",
-            "The search functionality didn't work as expected"
+            "The search functionality didn't work as expected",
+            "The website loaded slowly on my device",
+            "The product images were low quality and didn't show enough detail",
+            "There weren't enough customer reviews to make informed decisions",
+            "The filtering options were limited and unhelpful"
         ]
         
         neutral_phrases = [
@@ -271,50 +289,161 @@ class ReviewGenerator:
             "Product information was adequate",
             "The checkout process was typical",
             "The categorization of products was as expected",
-            "The search functionality was basic"
+            "The search functionality was basic",
+            "The website loaded at an average speed",
+            "The product images were of acceptable quality",
+            "There were some customer reviews but more would be helpful",
+            "The filtering options were standard"
         ]
         
-        # Select phrases based on sentiment
-        if sentiment == "positive":
-            phrases = random.sample(positive_phrases, min(3, len(positive_phrases)))
-        elif sentiment == "negative":
-            phrases = random.sample(negative_phrases, min(3, len(negative_phrases)))
+        # Select phrases based on sentiment and scores
+        selected_phrases = []
+        
+        # Navigation comments
+        if navigation_score >= 7:
+            selected_phrases.append("The navigation was intuitive and I could easily find my way around the site.")
+        elif navigation_score <= 4:
+            selected_phrases.append("I struggled with the navigation and often felt lost on the site.")
         else:
-            phrases = random.sample(neutral_phrases, min(3, len(neutral_phrases)))
+            selected_phrases.append("The navigation was adequate but could be more intuitive.")
             
+        # Design comments
+        if design_score >= 7:
+            selected_phrases.append("The design was visually appealing and created a pleasant shopping experience.")
+        elif design_score <= 4:
+            selected_phrases.append("The design was unappealing and detracted from my shopping experience.")
+        else:
+            selected_phrases.append("The design was functional but didn't particularly stand out.")
+            
+        # Findability comments
+        if findability_score >= 7:
+            selected_phrases.append("I could easily find the products I was looking for.")
+        elif findability_score <= 4:
+            selected_phrases.append("I had difficulty finding specific products I was interested in.")
+        else:
+            selected_phrases.append("Finding products was somewhat challenging but manageable.")
+        
+        # Add tech-level specific comments
+        if persona_tech_level == 'low':
+            if navigation_score <= 5:
+                selected_phrases.append("As someone who isn't very tech-savvy, I found the website challenging to use.")
+            else:
+                selected_phrases.append("Even though I'm not very tech-savvy, I found the website easy enough to use.")
+        elif persona_tech_level == 'high':
+            selected_phrases.append("As someone comfortable with technology, I noticed the website could use some technical improvements.")
+        
+        # Add price sensitivity comments
+        if persona_price_sensitivity == 'high':
+            selected_phrases.append("I always look for good deals, and I found the pricing on this site to be " + 
+                                   ("competitive." if sentiment == "positive" else "too high."))
+        elif persona_price_sensitivity == 'low':
+            selected_phrases.append("While price isn't my main concern, I appreciate the " + 
+                                   ("quality products offered." if sentiment == "positive" else "products but found the quality questionable."))
+        
         # Add comments about successful and failed actions
         if successful_actions:
-            phrases.append(f"I was able to {successful_actions[0].lower()} successfully")
+            successful_action_sample = random.sample(successful_actions, min(3, len(successful_actions)))
+            for action in successful_action_sample:
+                selected_phrases.append(f"I was able to {action.lower()} without any issues.")
             
         if failed_actions:
-            phrases.append(f"I had trouble with {failed_actions[0].lower()}")
-            
-        # Combine phrases into a review
-        review_content = f"I visited {website_url} recently. {' '.join(phrases)}. "
+            failed_action_sample = random.sample(failed_actions, min(3, len(failed_actions)))
+            for action in failed_action_sample:
+                selected_phrases.append(f"I had trouble with {action.lower()}, which was frustrating.")
         
+        # Add category-specific comments if applicable
+        if persona_preferred_categories and len(persona_preferred_categories) > 0:
+            category = random.choice(persona_preferred_categories)
+            if sentiment == "positive":
+                selected_phrases.append(f"As someone interested in {category}, I found the selection in this category to be good.")
+            elif sentiment == "negative":
+                selected_phrases.append(f"As someone interested in {category}, I was disappointed with the limited selection in this category.")
+            else:
+                selected_phrases.append(f"As someone interested in {category}, I found the selection in this category to be adequate.")
+        
+        # Add more general phrases based on sentiment
         if sentiment == "positive":
-            review_content += "Overall, I had a good experience and would recommend this site."
+            additional_phrases = random.sample(positive_phrases, min(3, len(positive_phrases)))
         elif sentiment == "negative":
-            review_content += "Overall, I was disappointed with my experience and would hesitate to use this site again."
+            additional_phrases = random.sample(negative_phrases, min(3, len(negative_phrases)))
         else:
-            review_content += "Overall, the site was adequate but could use some improvements."
-            
-        # Create review object
+            additional_phrases = random.sample(neutral_phrases, min(3, len(neutral_phrases)))
+        
+        selected_phrases.extend(additional_phrases)
+        random.shuffle(selected_phrases)  # Mix up the phrases for a more natural flow
+        
+        # Create introduction based on persona
+        introduction = f"I'm {persona_name}, a {persona_age}-year-old {persona_occupation} who shops online {persona_shopping_frequency}. "
+        introduction += f"I recently visited {website_url} to look for " + (f"{random.choice(persona_preferred_categories)}" if persona_preferred_categories else "products") + "."
+        
+        # Create detailed review sections
+        navigation_section = f"\n\nNAVIGATION (Score: {navigation_score}/10):\n"
+        navigation_section += "The website's navigation was " + ("intuitive and well-organized" if navigation_score >= 7 else 
+                                                               "adequate but could be improved" if navigation_score >= 5 else 
+                                                               "confusing and difficult to use") + ". "
+        if failed_actions and any("navigate" in action.lower() or "find" in action.lower() or "explore" in action.lower() for action in failed_actions):
+            navigation_section += "I encountered specific issues with finding my way around the site. "
+        
+        design_section = f"\n\nDESIGN (Score: {design_score}/10):\n"
+        design_section += "The visual design was " + ("appealing and modern" if design_score >= 7 else 
+                                                    "acceptable but not impressive" if design_score >= 5 else 
+                                                    "outdated and unappealing") + ". "
+        design_section += "The layout was " + ("clean and helped me focus on products" if design_score >= 7 else 
+                                             "somewhat cluttered" if design_score <= 4 else 
+                                             "standard for an e-commerce site") + "."
+        
+        product_section = f"\n\nPRODUCT PRESENTATION (Score: {findability_score}/10):\n"
+        product_section += "Products were " + ("well-presented with clear information" if findability_score >= 7 else 
+                                             "adequately presented but lacking some details" if findability_score >= 5 else 
+                                             "poorly presented with insufficient information") + ". "
+        if successful_actions and any("product" in action.lower() for action in successful_actions):
+            product_section += "I was able to find and examine products of interest. "
+        if failed_actions and any("product" in action.lower() for action in failed_actions):
+            product_section += "I had difficulty examining some products in detail. "
+        
+        # Create conclusion based on overall experience
+        if sentiment == "positive":
+            conclusion = f"\n\nOVERALL EXPERIENCE (Rating: {rating}/5):\n"
+            conclusion += "I had a positive experience on this website and would likely return for future purchases. "
+            conclusion += "The site's strengths are " + ("its navigation and user-friendly design" if navigation_score > design_score else "its product presentation and visual appeal") + ". "
+            if issues:
+                conclusion += f"However, there is room for improvement in {random.choice(issues).lower()}."
+        elif sentiment == "negative":
+            conclusion = f"\n\nOVERALL EXPERIENCE (Rating: {rating}/5):\n"
+            conclusion += "I had a disappointing experience on this website and would hesitate to return. "
+            conclusion += "The main issues were " + ("the confusing navigation and poor user experience" if navigation_score < design_score else "the poor product presentation and visual design") + ". "
+            if issues:
+                conclusion += f"Specifically, {random.choice(issues).lower()} was particularly problematic."
+        else:
+            conclusion = f"\n\nOVERALL EXPERIENCE (Rating: {rating}/5):\n"
+            conclusion += "My experience on this website was average. "
+            conclusion += "While there were no major issues, the site didn't particularly impress me either. "
+            if issues:
+                conclusion += f"Areas for improvement include {random.choice(issues).lower()}."
+        
+        # Combine all sections into a comprehensive review
+        review_content = introduction + "\n\nSUMMARY:\n" + " ".join(selected_phrases[:5]) + navigation_section + design_section + product_section + conclusion
+        
+        # Create a review dictionary with all necessary information
         review = {
-            "id": f"review_{len(self.reviews) + 1}",
-            "timestamp": datetime.now().isoformat(),
-            "website_url": website_url,
-            "persona_id": persona.get("id", "unknown"),
-            "rating": rating,
-            "sentiment": sentiment,
-            "content": review_content,
-            "scores": {
-                "navigation": navigation_score,
-                "design": design_score,
-                "findability": findability_score,
-                "overall": overall_score
-            }
+            'review': review_content,
+            'rating': rating,
+            'sentiment': sentiment,
+            'scores': {
+                'navigation': navigation_score,
+                'design': design_score,
+                'findability': findability_score,
+                'overall': overall_score
+            },
+            'persona': {
+                'name': persona_name,
+                'age': persona_age,
+                'gender': persona_gender,
+                'occupation': persona_occupation,
+                'tech_level': persona_tech_level,
+                'shopping_frequency': persona_shopping_frequency
+            },
+            'timestamp': datetime.now().isoformat()
         }
         
-        self.reviews.append(review)
         return review 
