@@ -4,7 +4,7 @@ import re
 import datetime
 from src.persona.generator import Persona
 from src.interaction.simulator import SimulationResult
-from src.api.openai_client import OpenAIClient
+from src.api.ai_client import AIClient
 
 @dataclass
 class Review:
@@ -23,15 +23,18 @@ class Review:
 class ReviewGenerator:
     """Generate detailed website reviews based on simulated interactions."""
     
-    def __init__(self, openai_client):
-        """Initialize with OpenAI client."""
-        self.openai_client = openai_client
+    def __init__(self, ai_client: AIClient = None):
+        """Initialize with AI client."""
+        self.ai_client = ai_client
         self.reviews = []
     
-    def generate(self, simulation_result, persona):
+    def generate(self, website_url, persona, simulation_result):
         """Generate a comprehensive review based on simulation results and persona."""
+        # If no AI client is available, generate a basic review
+        if not self.ai_client:
+            return self._generate_basic_review(website_url, persona, simulation_result)
+            
         # Extract key information from simulation result
-        website_url = simulation_result.get('website_url', 'Unknown')
         interaction_data = simulation_result.get('interaction_data', {})
         
         # Create a detailed prompt for the AI
@@ -99,12 +102,12 @@ class ReviewGenerator:
             - How this site compares to industry standards
             - Areas where competitors perform better
         
-        Please respond with a detailed review in a friendly, conversational tone that reflects your persona’s unique perspective. 
-        Your review should feel natural, include specific examples from your experience, and provide clear suggestions that the website could implement to improve the user experience.”
+        Please respond with a detailed review in a friendly, conversational tone that reflects your persona's unique perspective. 
+        Your review should feel natural, include specific examples from your experience, and provide clear suggestions that the website could implement to improve the user experience.
         """
         
-        # Generate the review using OpenAI
-        review_text = self.openai_client.generate_text(prompt, max_tokens=1500)
+        # Generate the review using AI
+        review_text = self.ai_client.generate_text(prompt, max_tokens=1500)
         
         # Extract scores using regex
         # Default scores
@@ -204,3 +207,114 @@ class ReviewGenerator:
     def list_all(self):
         """Return all generated reviews."""
         return self.reviews 
+
+    def _generate_basic_review(self, website_url, persona, simulation_result):
+        """Generate a basic review when AI is not available."""
+        import random
+        from datetime import datetime
+        
+        # Extract scores from simulation result
+        navigation_score = simulation_result.get('navigation_score', random.uniform(3.0, 8.0))
+        design_score = simulation_result.get('design_score', random.uniform(3.0, 8.0))
+        findability_score = simulation_result.get('findability_score', random.uniform(3.0, 8.0))
+        
+        # Calculate overall score
+        overall_score = round((navigation_score + design_score + findability_score) / 3, 1)
+        
+        # Extract issues
+        issues = simulation_result.get('issues', [])
+        if not issues:
+            issues = ["Website navigation could be improved", "Product information could be more detailed"]
+            
+        # Extract successful actions
+        successful_actions = simulation_result.get('successful_actions', [])
+        
+        # Extract failed actions
+        failed_actions = simulation_result.get('failed_actions', [])
+        
+        # Generate sentiment
+        sentiment_options = ["positive", "neutral", "negative"]
+        sentiment_weights = [0.4, 0.3, 0.3]  # Slightly biased towards positive
+        sentiment = random.choices(sentiment_options, weights=sentiment_weights, k=1)[0]
+        
+        # Generate rating based on overall score and sentiment
+        rating = min(5, max(1, round(overall_score / 2)))  # Convert 10-point scale to 5-point scale
+        
+        # Adjust rating based on sentiment
+        if sentiment == "positive" and rating < 4:
+            rating = min(5, rating + 1)
+        elif sentiment == "negative" and rating > 2:
+            rating = max(1, rating - 1)
+            
+        # Generate review content based on scores and actions
+        positive_phrases = [
+            "I found the website easy to navigate",
+            "The design is clean and modern",
+            "Product information was clear and helpful",
+            "The checkout process was straightforward",
+            "I liked how the products were categorized",
+            "The search functionality worked well"
+        ]
+        
+        negative_phrases = [
+            "The website was difficult to navigate",
+            "The design feels outdated",
+            "Product information was lacking",
+            "The checkout process was confusing",
+            "The categorization of products wasn't intuitive",
+            "The search functionality didn't work as expected"
+        ]
+        
+        neutral_phrases = [
+            "The website has a standard layout",
+            "The design is functional but not exceptional",
+            "Product information was adequate",
+            "The checkout process was typical",
+            "The categorization of products was as expected",
+            "The search functionality was basic"
+        ]
+        
+        # Select phrases based on sentiment
+        if sentiment == "positive":
+            phrases = random.sample(positive_phrases, min(3, len(positive_phrases)))
+        elif sentiment == "negative":
+            phrases = random.sample(negative_phrases, min(3, len(negative_phrases)))
+        else:
+            phrases = random.sample(neutral_phrases, min(3, len(neutral_phrases)))
+            
+        # Add comments about successful and failed actions
+        if successful_actions:
+            phrases.append(f"I was able to {successful_actions[0].lower()} successfully")
+            
+        if failed_actions:
+            phrases.append(f"I had trouble with {failed_actions[0].lower()}")
+            
+        # Combine phrases into a review
+        review_content = f"I visited {website_url} recently. {' '.join(phrases)}. "
+        
+        if sentiment == "positive":
+            review_content += "Overall, I had a good experience and would recommend this site."
+        elif sentiment == "negative":
+            review_content += "Overall, I was disappointed with my experience and would hesitate to use this site again."
+        else:
+            review_content += "Overall, the site was adequate but could use some improvements."
+            
+        # Create review object
+        review = {
+            "id": f"review_{len(self.reviews) + 1}",
+            "timestamp": datetime.now().isoformat(),
+            "website_url": website_url,
+            "persona_id": persona.get("id", "unknown"),
+            "rating": rating,
+            "sentiment": sentiment,
+            "content": review_content,
+            "scores": {
+                "navigation": navigation_score,
+                "design": design_score,
+                "findability": findability_score,
+                "overall": overall_score
+            }
+        }
+        
+        self.reviews.append(review)
+        return review 

@@ -111,7 +111,7 @@
                 <!-- Executive Summary -->
                 <div class="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-100">
                     <h3 class="text-xl font-bold mb-3 text-blue-800">Executive Summary</h3>
-                    <p class="text-gray-700 mb-4">This report provides a comprehensive analysis of the evaluated e-commerce website based on simulated interactions from diverse user personas. The analysis covers navigation, design, findability, and overall user experience.</p>
+                    <p class="text-gray-700 mb-4">This report provides a comprehensive analysis of the evaluated e-commerce website <span id="evaluatedUrl" class="font-semibold"></span> based on simulated interactions from diverse user personas. The analysis covers navigation, design, findability, and overall user experience.</p>
                     
                     <!-- Overall Score Summary -->
                     <div class="flex flex-col md:flex-row items-center justify-between">
@@ -474,7 +474,7 @@
                 const startData = await startResponse.json();
                 addLogEntry(`Evaluation request response: ${JSON.stringify(startData)}`, 'info');
                 
-                if (startData.status !== 'started') {
+                if (!startData.success) {
                     throw new Error(startData.message || 'Failed to start evaluation');
                 }
                 
@@ -483,373 +483,113 @@
                 
                 // Start progress monitoring
                 addLogEntry('Connecting to progress stream...', 'info');
-                eventSource = new EventSource('/api/progress');
+                eventSource = new EventSource(`/api/progress/${evaluationId}`);
                 let evaluationComplete = false;
-                
-                eventSource.onmessage = async (event) => {
-                    const data = JSON.parse(event.data);
-                    document.getElementById('progressMessage').textContent = data.message;
-                    
-                    // Add to debug log
-                    let logType = 'info';
-                    if (data.message.startsWith('Error')) {
-                        logType = 'error';
-                    } else if (data.percentage === 100) {
-                        logType = 'success';
-                    }
-                    
-                    addLogEntry(data.message, logType);
-                    
-                    // Add detailed log entries based on the message content
-                    if (data.message.includes('Generating personas')) {
-                        addLogEntry('Starting persona generation process...', 'info');
-                    } else if (data.message.includes('Simulating interaction')) {
-                        const match = data.message.match(/persona (\d+)\/(\d+)/);
-                        if (match) {
-                            const current = match[1];
-                            const total = match[2];
-                            addLogEntry(`Simulating website interaction for persona ${current} of ${total}`, 'info');
-                        }
-                    } else if (data.message.includes('Generating review')) {
-                        const match = data.message.match(/review (\d+)\/(\d+)/);
-                        if (match) {
-                            const current = match[1];
-                            const total = match[2];
-                            addLogEntry(`Generating detailed review for persona ${current} of ${total}`, 'info');
-                        }
-                    } else if (data.message.includes('expert analysis')) {
-                        addLogEntry('Starting expert analysis of all reviews...', 'info');
-                    }
-                    
-                    if (data.percentage !== null) {
-                        document.getElementById('progressPercentage').textContent = `${data.percentage}%`;
-                        document.getElementById('progressBar').style.width = `${data.percentage}%`;
-                    }
-                    
-                    // When progress is complete or error occurs
-                    if (data.percentage === 100 || data.message.startsWith('Error')) {
-                        evaluationComplete = true;
-                        eventSource.close();
-                        eventSource = null;
-                        
-                        if (data.message.startsWith('Error')) {
-                            addLogEntry(`Evaluation failed: ${data.message}`, 'error');
-                            throw new Error(data.message);
-                        }
-                        
-                        // Fetch final results
-                        addLogEntry('Evaluation complete. Fetching results...', 'success');
-                        const resultsResponse = await fetch(`/api/results/${evaluationId}`);
-                        if (!resultsResponse.ok) {
-                            throw new Error(`HTTP error! status: ${resultsResponse.status}`);
-                        }
-                        
-                        const resultsData = await resultsResponse.json();
-                        addLogEntry('Results received from server', 'success');
-                        
-                        // Debug: Log the entire results data
-                        console.log('Results data:', resultsData);
-                        addLogEntry(`Debug - Results data structure: ${JSON.stringify(resultsData).substring(0, 500)}...`, 'info');
-                        
-                        if (resultsData.status === 'success') {
-                            // Log result summary
-                            addLogEntry(`Overall score: ${resultsData.report.overall_scores.overall.toFixed(1)}/10`, 'success');
-                            addLogEntry(`Found ${resultsData.report.key_findings.length} key findings`, 'info');
-                            addLogEntry(`Generated ${resultsData.report.recommendations.length} recommendations`, 'info');
-                            
-                            // Debug: Log the scores
-                            console.log('Scores:', resultsData.report.overall_scores);
-                            addLogEntry(`Debug - Scores: ${JSON.stringify(resultsData.report.overall_scores)}`, 'info');
-                            
-                            try {
-                                // Update scores - handle different property names
-                                const scores = resultsData.report.overall_scores;
-                                
-                                // Get navigation score (could be 'navigation' or 'navigation_score')
-                                const navScore = scores.navigation !== undefined ? scores.navigation : 
-                                                (scores.navigation_score !== undefined ? scores.navigation_score : 0);
-                                
-                                // Get design score (could be 'design' or 'design_score')
-                                const designScore = scores.design !== undefined ? scores.design : 
-                                                  (scores.design_score !== undefined ? scores.design_score : 0);
-                                
-                                // Get findability score (could be 'findability' or 'findability_score')
-                                const findScore = scores.findability !== undefined ? scores.findability : 
-                                                (scores.findability_score !== undefined ? scores.findability_score : 0);
-                                
-                                // Get overall score
-                                const overallScore = scores.overall !== undefined ? scores.overall : 0;
-                                
-                                // Update text displays
-                                document.getElementById('navigationScoreText').textContent = navScore.toFixed(1) + '/10';
-                                document.getElementById('designScoreText').textContent = designScore.toFixed(1) + '/10';
-                                document.getElementById('findabilityScoreText').textContent = findScore.toFixed(1) + '/10';
-                                document.getElementById('overallScoreCircle').textContent = overallScore.toFixed(1);
-                                
-                                // Update progress bars
-                                document.getElementById('navigationScoreBar').style.width = `${navScore * 10}%`;
-                                document.getElementById('designScoreBar').style.width = `${designScore * 10}%`;
-                                document.getElementById('findabilityScoreBar').style.width = `${findScore * 10}%`;
-                                
-                                // Update overall score circle
-                                const circlePath = document.getElementById('overallScorePath');
-                                const circumference = 2 * Math.PI * 15.9155; // Based on the SVG path
-                                const dashOffset = circumference - (overallScore / 10) * circumference;
-                                circlePath.style.strokeDasharray = `${circumference}`;
-                                circlePath.style.strokeDashoffset = `${dashOffset}`;
-                                
-                                // Update charts
-                                if (resultsData.report.charts && resultsData.report.charts.scores_distribution) {
-                                    document.getElementById('scoresChart').src = 
-                                        `data:image/png;base64,${resultsData.report.charts.scores_distribution}`;
-                                } else {
-                                    addLogEntry('Warning: Scores distribution chart data is missing', 'error');
-                                }
-                                
-                                if (resultsData.report.charts && resultsData.report.charts.issues_frequency) {
-                                    document.getElementById('issuesChart').src = 
-                                        `data:image/png;base64,${resultsData.report.charts.issues_frequency}`;
-                                } else {
-                                    addLogEntry('Warning: Issues frequency chart data is missing', 'error');
-                                }
-                                
-                                // Update behavioral insights
-                                if (resultsData.report.behavioral_insights) {
-                                    const behavioralData = resultsData.report.behavioral_insights;
-                                    
-                                    // Engagement metrics
-                                    const engagementDiv = document.getElementById('behavioralEngagement');
-                                    engagementDiv.innerHTML = ''; // Clear previous content
-                                    
-                                    if (behavioralData.engagement_level) {
-                                        engagementDiv.innerHTML += `
-                                            <div class="mb-3">
-                                                <div class="font-medium text-gray-700">Primary Engagement Level</div>
-                                                <div class="text-lg font-semibold">${behavioralData.engagement_level}</div>
-                                            </div>
-                                        `;
-                                    } else {
-                                        engagementDiv.innerHTML += `
-                                            <div class="mb-3">
-                                                <div class="font-medium text-gray-700">Primary Engagement Level</div>
-                                                <div class="text-lg font-semibold">Moderate</div>
-                                            </div>
-                                        `;
-                                    }
-                                    
-                                    if (behavioralData.areas_of_interest && behavioralData.areas_of_interest.length > 0) {
-                                        engagementDiv.innerHTML += `
-                                            <div>
-                                                <div class="font-medium text-gray-700">Areas of Interest</div>
-                                                <ul class="list-disc list-inside text-gray-600 mt-1">
-                                                    ${behavioralData.areas_of_interest.map(area => `<li>${area}</li>`).join('')}
-                                                </ul>
-                                            </div>
-                                        `;
-                                    }
-                                    
-                                    // Pain points
-                                    const painPointsDiv = document.getElementById('behavioralPainPoints');
-                                    painPointsDiv.innerHTML = ''; // Clear previous content
-                                    
-                                    if (behavioralData.pain_points && behavioralData.pain_points.length > 0) {
-                                        painPointsDiv.innerHTML = `
-                                            <ul class="list-disc list-inside text-gray-600">
-                                                ${behavioralData.pain_points.map(point => `<li>${point}</li>`).join('')}
-                                            </ul>
-                                        `;
-                                    } else {
-                                        painPointsDiv.innerHTML = `
-                                            <p class="text-gray-600">No specific pain points identified.</p>
-                                        `;
-                                    }
-                                } else {
-                                    // Set default values if behavioral insights are missing
-                                    document.getElementById('behavioralEngagement').innerHTML = `
-                                        <div class="mb-3">
-                                            <div class="font-medium text-gray-700">Primary Engagement Level</div>
-                                            <div class="text-lg font-semibold">Moderate</div>
-                                        </div>
-                                    `;
-                                    
-                                    document.getElementById('behavioralPainPoints').innerHTML = `
-                                        <p class="text-gray-600">No specific pain points identified.</p>
-                                    `;
-                                }
-                                
-                                // Update AI review insights
-                                if (resultsData.report.ai_review_insights) {
-                                    const reviewData = resultsData.report.ai_review_insights;
-                                    
-                                    // Average rating
-                                    if (reviewData.average_rating !== undefined) {
-                                        document.getElementById('averageRating').textContent = reviewData.average_rating.toFixed(1);
-                                    } else {
-                                        document.getElementById('averageRating').textContent = '3.0';
-                                    }
-                                    
-                                    // Sentiment distribution
-                                    if (reviewData.sentiment_distribution) {
-                                        const sentiments = reviewData.sentiment_distribution;
-                                        const positivePercentage = sentiments.positive || 0;
-                                        const neutralPercentage = sentiments.neutral || 0;
-                                        const negativePercentage = sentiments.negative || 0;
-                                        
-                                        document.getElementById('positivePercentage').textContent = `${positivePercentage}%`;
-                                        document.getElementById('neutralPercentage').textContent = `${neutralPercentage}%`;
-                                        document.getElementById('negativePercentage').textContent = `${negativePercentage}%`;
-                                        
-                                        document.getElementById('positiveBar').style.width = `${positivePercentage}%`;
-                                        document.getElementById('neutralBar').style.width = `${neutralPercentage}%`;
-                                        document.getElementById('negativeBar').style.width = `${negativePercentage}%`;
-                                    } else {
-                                        // Default distribution
-                                        document.getElementById('positivePercentage').textContent = '33%';
-                                        document.getElementById('neutralPercentage').textContent = '34%';
-                                        document.getElementById('negativePercentage').textContent = '33%';
-                                        
-                                        document.getElementById('positiveBar').style.width = '33%';
-                                        document.getElementById('neutralBar').style.width = '34%';
-                                        document.getElementById('negativeBar').style.width = '33%';
-                                    }
-                                    
-                                    // Review themes
-                                    const positiveThemesEl = document.getElementById('positiveThemes');
-                                    const negativeThemesEl = document.getElementById('negativeThemes');
-                                    
-                                    positiveThemesEl.innerHTML = '';
-                                    negativeThemesEl.innerHTML = '';
-                                    
-                                    if (reviewData.positive_themes && reviewData.positive_themes.length > 0) {
-                                        positiveThemesEl.innerHTML = 
-                                            reviewData.positive_themes.map(theme => `<li>${theme}</li>`).join('');
-                                    } else {
-                                        positiveThemesEl.innerHTML = '<li>No specific positive themes identified</li>';
-                                    }
-                                    
-                                    if (reviewData.negative_themes && reviewData.negative_themes.length > 0) {
-                                        negativeThemesEl.innerHTML = 
-                                            reviewData.negative_themes.map(theme => `<li>${theme}</li>`).join('');
-                                    } else {
-                                        negativeThemesEl.innerHTML = '<li>No specific negative themes identified</li>';
-                                    }
-                                } else {
-                                    // Set default values if AI review insights are missing
-                                    document.getElementById('averageRating').textContent = '3.0';
-                                    
-                                    document.getElementById('positivePercentage').textContent = '33%';
-                                    document.getElementById('neutralPercentage').textContent = '34%';
-                                    document.getElementById('negativePercentage').textContent = '33%';
-                                    
-                                    document.getElementById('positiveBar').style.width = '33%';
-                                    document.getElementById('neutralBar').style.width = '34%';
-                                    document.getElementById('negativeBar').style.width = '33%';
-                                    
-                                    document.getElementById('positiveThemes').innerHTML = '<li>No specific positive themes identified</li>';
-                                    document.getElementById('negativeThemes').innerHTML = '<li>No specific negative themes identified</li>';
-                                }
-                                
-                                // Update findings and recommendations with icons
-                                const findingsList = document.getElementById('keyFindings');
-                                findingsList.innerHTML = '';
-                                
-                                if (resultsData.report.key_findings && resultsData.report.key_findings.length > 0) {
-                                    findingsList.innerHTML = resultsData.report.key_findings
-                                        .map(finding => `
-                                            <li class="flex items-start">
-                                                <span class="text-yellow-500 mr-2">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                    </svg>
-                                                </span>
-                                                <span>${finding}</span>
-                                            </li>
-                                        `)
-                                        .join('');
-                                } else {
-                                    findingsList.innerHTML = `
-                                        <li class="flex items-start">
-                                            <span class="text-yellow-500 mr-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                </svg>
-                                            </span>
-                                            <span>Website evaluation completed with limited data available.</span>
-                                        </li>
-                                    `;
-                                }
-                                
-                                const recommendationsList = document.getElementById('recommendations');
-                                recommendationsList.innerHTML = '';
-                                
-                                if (resultsData.report.recommendations && resultsData.report.recommendations.length > 0) {
-                                    recommendationsList.innerHTML = resultsData.report.recommendations
-                                        .map(rec => `
-                                            <li class="flex items-start">
-                                                <span class="text-green-500 mr-2">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                </span>
-                                                <span>${rec}</span>
-                                            </li>
-                                        `)
-                                        .join('');
-                                } else {
-                                    recommendationsList.innerHTML = `
-                                        <li class="flex items-start">
-                                            <span class="text-green-500 mr-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </span>
-                                            <span>Consider running a more detailed evaluation with more personas for better insights.</span>
-                                        </li>
-                                    `;
-                                }
-                                
-                                // Update detailed analysis with markdown parsing
-                                const detailedAnalysisDiv = document.getElementById('detailedAnalysis');
-                                if (resultsData.report.detailed_analysis) {
-                                    const detailedAnalysisContent = resultsData.report.detailed_analysis.replace(/\n/g, '<br>');
-                                    detailedAnalysisDiv.innerHTML = detailedAnalysisContent;
-                                } else {
-                                    detailedAnalysisDiv.innerHTML = '<p>No detailed analysis available for this evaluation.</p>';
-                                }
-                                
-                                // Show results and hide progress
-                                const resultsElement = document.getElementById('results');
-                                resultsElement.classList.remove('hidden');
-                                addLogEntry(`Debug - Results element display: ${window.getComputedStyle(resultsElement).display}`, 'info');
-                                
-                                progress.classList.add('hidden');
-                                
-                                // Keep debug log visible below results
-                                debugLog.classList.remove('hidden');
-                                
-                                // Log completion
-                                addLogEntry('Results displayed successfully', 'success');
-                            } catch (error) {
-                                console.error('Error updating UI with results:', error);
-                                addLogEntry(`Error updating UI: ${error.message}`, 'error');
-                            }
-                        } else {
-                            throw new Error(resultsData.message || 'Failed to get evaluation results');
-                        }
-                    }
-                };
                 
                 // Handle SSE errors
                 eventSource.onerror = (error) => {
                     console.error('SSE Error:', error);
-                    addLogEntry(`Error in progress stream: ${error}`, 'error');
+                    addLogEntry('Error in progress stream: Connection lost', 'error');
+                    
+                    // Clean up event source
                     if (eventSource) {
                         eventSource.close();
                         eventSource = null;
                     }
-                    if (!evaluationComplete) {
-                        document.getElementById('progressMessage').textContent = 'Error: Lost connection to server';
+                    
+                    // Update UI to show error
+                    document.getElementById('progressMessage').textContent = 'Error: Connection lost';
+                    document.getElementById('progressPercentage').textContent = 'Failed';
+                    document.getElementById('progressBar').style.width = '100%';
+                    document.getElementById('progressBar').style.backgroundColor = '#EF4444';  // Red color
+                };
+                
+                // Handle SSE messages
+                eventSource.onmessage = async (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        // Check for error state
+                        if (data.error) {
+                            throw new Error(data.message);
+                        }
+                        
+                        // Update progress UI
+                        document.getElementById('progressMessage').textContent = data.message;
+                        if (data.percentage !== undefined) {
+                            document.getElementById('progressPercentage').textContent = `${data.percentage}%`;
+                            document.getElementById('progressBar').style.width = `${data.percentage}%`;
+                        }
+                        
+                        // Add to debug log
+                        let logType = 'info';
+                        if (data.message.startsWith('Error')) {
+                            logType = 'error';
+                        } else if (data.percentage === 100) {
+                            logType = 'success';
+                        }
+                        addLogEntry(data.message, logType);
+                        
+                        // Check for completion
+                        if (data.complete || data.percentage === 100) {
+                            evaluationComplete = true;
+                            if (eventSource) {
+                                eventSource.close();
+                                eventSource = null;
+                            }
+                            
+                            // Fetch final results
+                            addLogEntry('Fetching evaluation results...', 'info');
+                            const resultsResponse = await fetch(`/api/results/${evaluationId}`);
+                            if (!resultsResponse.ok) {
+                                throw new Error(`Failed to fetch results: ${resultsResponse.status}`);
+                            }
+                            
+                            const resultsData = await resultsResponse.json();
+                            console.log('Results data received:', resultsData);
+                            
+                            if (resultsData.success) {
+                                // Log detailed persona and simulation information
+                                if (resultsData.results && resultsData.results.personas) {
+                                    resultsData.results.personas.forEach((persona, index) => {
+                                        addLogEntry(`Full Persona ${index + 1} Details: ${JSON.stringify(persona)}`, 'info');
+                                    });
+                                }
+                                
+                                if (resultsData.results && resultsData.results.simulation_results) {
+                                    resultsData.results.simulation_results.forEach((result, index) => {
+                                        addLogEntry(`Detailed simulation results for persona ${index + 1}: ${JSON.stringify(result)}`, 'info');
+                                    });
+                                }
+                                
+                                try {
+                                    window.updateUIWithResults(resultsData.results);
+                                    addLogEntry('Evaluation completed successfully', 'success');
+                                } catch (error) {
+                                    console.error('Error in updateUIWithResults:', error);
+                                    addLogEntry(`Error updating UI: ${error.message}`, 'error');
+                                    // Try to force show results as a fallback
+                                    forceShowResults();
+                                }
+                            } else {
+                                throw new Error(resultsData.error || 'Failed to get evaluation results');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error processing progress update:', error);
+                        addLogEntry(`Error: ${error.message}`, 'error');
+                        
+                        // Update UI to show error
+                        document.getElementById('progressMessage').textContent = `Error: ${error.message}`;
                         document.getElementById('progressPercentage').textContent = 'Failed';
+                        document.getElementById('progressBar').style.width = '100%';
+                        document.getElementById('progressBar').style.backgroundColor = '#EF4444';  // Red color
+                        
+                        // Clean up event source
+                        if (eventSource) {
+                            eventSource.close();
+                            eventSource = null;
+                        }
                     }
                 };
                 
@@ -882,9 +622,372 @@
             results.classList.remove('hidden');
             results.classList.add('debug-border');
             results.style.display = 'block';
+            
+            // Try to get the latest results from the debug log
+            try {
+                const debugLogContent = document.getElementById('debugLogContent');
+                const logEntries = debugLogContent.querySelectorAll('.log-entry');
+                
+                // Look for entries with simulation results or persona details
+                let foundData = false;
+                for (let i = logEntries.length - 1; i >= 0; i--) {
+                    const entry = logEntries[i];
+                    const text = entry.textContent || '';
+                    
+                    if (text.includes('Detailed simulation results') || text.includes('Full Persona')) {
+                        // Try to extract and display some basic information
+                        const contentDiv = entry.querySelector('div:nth-child(2)');
+                        if (contentDiv) {
+                            const content = contentDiv.textContent || '';
+                            try {
+                                const data = JSON.parse(content);
+                                if (data) {
+                                    // Display some basic information
+                                    const infoDiv = document.createElement('div');
+                                    infoDiv.className = 'bg-yellow-100 p-4 rounded-lg mb-4';
+                                    infoDiv.innerHTML = '<p class="font-bold">Results shown in emergency mode due to UI update error</p>';
+                                    results.querySelector('.bg-white').prepend(infoDiv);
+                                    foundData = true;
+                                    break;
+                                }
+                            } catch (e) {
+                                console.error('Error parsing JSON from log entry:', e);
+                            }
+                        }
+                    }
+                }
+                
+                if (!foundData) {
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'bg-yellow-100 p-4 rounded-lg mb-4';
+                    infoDiv.innerHTML = '<p class="font-bold">Results shown in emergency mode. No data could be extracted from logs.</p>';
+                    results.querySelector('.bg-white').prepend(infoDiv);
+                }
+            } catch (error) {
+                console.error('Error in forceShowResults:', error);
+            }
+            
             console.log('Force showing results');
             return 'Results should be visible now';
         }
+
+        // Function to update UI with evaluation results
+        window.updateUIWithResults = function(data) {
+            console.log('Updating UI with results:', data);
+            try {
+                // Show results section and hide progress
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('progress').classList.add('hidden');
+
+                // Update website URL
+                if (data.website_url) {
+                    console.log('Setting website URL:', data.website_url);
+                    document.getElementById('evaluatedUrl').textContent = data.website_url;
+                }
+
+                // Update scores
+                const scores = data.report?.scores || data.report?.overall_scores || {};
+                console.log('Setting scores:', scores);
+                
+                // Set overall score
+                const overallScore = scores.overall || 0;
+                if (document.getElementById('overallScoreCircle')) {
+                    document.getElementById('overallScoreCircle').textContent = overallScore.toFixed(1);
+                    // Update the circle path for visual representation
+                    const overallScorePath = document.getElementById('overallScorePath');
+                    if (overallScorePath) {
+                        const percentage = (overallScore / 10) * 100;
+                        overallScorePath.setAttribute('stroke-dasharray', `${percentage}, 100`);
+                    }
+                }
+                
+                // Set individual scores
+                const scoreMapping = {
+                    'navigationScore': 'navigation',
+                    'uiScore': 'ui_design',
+                    'productScore': 'product_presentation',
+                    'checkoutScore': 'checkout',
+                    'mobileScore': 'mobile'
+                };
+                
+                Object.entries(scoreMapping).forEach(([elementId, scoreKey]) => {
+                    const scoreValue = scores[scoreKey] || 0;
+                    const scoreElement = document.getElementById(elementId);
+                    const scoreBarElement = document.getElementById(`${elementId}Bar`);
+                    const scoreTextElement = document.getElementById(`${elementId}Text`);
+                    
+                    if (scoreElement) {
+                        scoreElement.textContent = scoreValue.toFixed(1);
+                    }
+                    
+                    if (scoreBarElement) {
+                        scoreBarElement.style.width = `${(scoreValue / 10) * 100}%`;
+                    }
+                    
+                    if (scoreTextElement) {
+                        scoreTextElement.textContent = `${scoreValue.toFixed(1)}/10`;
+                    }
+                });
+                
+                // Set navigation, design, and findability score bars
+                const barMapping = {
+                    'navigationScoreBar': 'navigation',
+                    'designScoreBar': 'ui_design',
+                    'findabilityScoreBar': 'product_presentation'
+                };
+                
+                Object.entries(barMapping).forEach(([elementId, scoreKey]) => {
+                    const scoreValue = scores[scoreKey] || 0;
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.style.width = `${(scoreValue / 10) * 100}%`;
+                    }
+                });
+                
+                // Set navigation, design, and findability score texts
+                const textMapping = {
+                    'navigationScoreText': 'navigation',
+                    'designScoreText': 'ui_design',
+                    'findabilityScoreText': 'product_presentation'
+                };
+                
+                Object.entries(textMapping).forEach(([elementId, scoreKey]) => {
+                    const scoreValue = scores[scoreKey] || 0;
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.textContent = `${scoreValue.toFixed(1)}/10`;
+                    }
+                });
+
+                // Update key findings
+                const keyFindings = document.getElementById('keyFindings');
+                if (keyFindings) {
+                    console.log('Setting key findings:', data.report?.key_findings);
+                    keyFindings.innerHTML = '';
+                    (data.report?.key_findings || []).forEach(finding => {
+                        const li = document.createElement('li');
+                        li.textContent = finding;
+                        keyFindings.appendChild(li);
+                    });
+                }
+
+                // Update recommendations
+                const recommendations = document.getElementById('recommendations');
+                if (recommendations) {
+                    console.log('Setting recommendations:', data.report?.recommendations);
+                    recommendations.innerHTML = '';
+                    (data.report?.recommendations || []).forEach(rec => {
+                        const li = document.createElement('li');
+                        li.textContent = rec;
+                        recommendations.appendChild(li);
+                    });
+                }
+                
+                // Update charts if available
+                if (data.report?.charts) {
+                    const charts = data.report.charts;
+                    
+                    // Set scores distribution chart
+                    if (charts.scores_distribution) {
+                        const scoresChart = document.getElementById('scoresChart');
+                        if (scoresChart) {
+                            scoresChart.src = `data:image/png;base64,${charts.scores_distribution}`;
+                        }
+                    }
+                    
+                    // Set issues frequency chart
+                    if (charts.issues_frequency) {
+                        const issuesChart = document.getElementById('issuesChart');
+                        if (issuesChart) {
+                            issuesChart.src = `data:image/png;base64,${charts.issues_frequency}`;
+                        }
+                    }
+                }
+                
+                // Update behavioral insights
+                if (data.report?.behavioral_insights) {
+                    const insights = data.report.behavioral_insights;
+                    
+                    // Update engagement metrics
+                    const engagementMetrics = document.getElementById('behavioralEngagement');
+                    if (engagementMetrics) {
+                        engagementMetrics.innerHTML = '';
+                        
+                        // Add engagement level
+                        const engagementLevels = insights.engagement_levels || [];
+                        if (engagementLevels.length > 0) {
+                            const avgEngagement = engagementLevels.reduce((acc, level) => {
+                                return acc + (level === 'high' ? 3 : level === 'medium' ? 2 : 1);
+                            }, 0) / engagementLevels.length;
+                            
+                            const engagementDiv = document.createElement('div');
+                            engagementDiv.innerHTML = `
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-700">Average Engagement</span>
+                                    <span class="text-blue-600 font-medium">${avgEngagement.toFixed(1)}/3</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: ${(avgEngagement / 3) * 100}%"></div>
+                                </div>
+                            `;
+                            engagementMetrics.appendChild(engagementDiv);
+                        }
+                        
+                        // Add areas of interest
+                        const areasOfInterest = insights.areas_of_interest || [];
+                        if (areasOfInterest.length > 0) {
+                            const areasDiv = document.createElement('div');
+                            areasDiv.className = 'mt-4';
+                            areasDiv.innerHTML = `
+                                <h5 class="font-medium text-gray-700 mb-2">Areas of Interest</h5>
+                                <ul class="list-disc list-inside text-gray-600">
+                                    ${areasOfInterest.map(area => `<li>${area}</li>`).join('')}
+                                </ul>
+                            `;
+                            engagementMetrics.appendChild(areasDiv);
+                        }
+                    }
+                    
+                    // Update pain points
+                    const painPoints = document.getElementById('behavioralPainPoints');
+                    if (painPoints) {
+                        painPoints.innerHTML = '';
+                        
+                        const commonPainPoints = insights.common_pain_points || [];
+                        if (commonPainPoints.length > 0) {
+                            const painPointsDiv = document.createElement('div');
+                            painPointsDiv.innerHTML = `
+                                <ul class="list-disc list-inside text-gray-600">
+                                    ${commonPainPoints.map(point => `<li>${point}</li>`).join('')}
+                                </ul>
+                            `;
+                            painPoints.appendChild(painPointsDiv);
+                        } else {
+                            painPoints.innerHTML = '<p class="text-gray-600">No common pain points identified.</p>';
+                        }
+                    }
+                }
+                
+                // Update AI review insights
+                if (data.report?.ai_review_insights) {
+                    const reviewInsights = data.report.ai_review_insights;
+                    
+                    // Update average rating
+                    const avgRating = reviewInsights.average_rating || 0;
+                    const avgRatingElement = document.getElementById('averageRating');
+                    if (avgRatingElement) {
+                        avgRatingElement.textContent = avgRating.toFixed(1);
+                    }
+                    
+                    // Update sentiment distribution
+                    const sentimentDistribution = reviewInsights.sentiment_distribution || {};
+                    const positivePercentage = sentimentDistribution.positive || 0;
+                    const neutralPercentage = sentimentDistribution.neutral || 0;
+                    const negativePercentage = sentimentDistribution.negative || 0;
+                    
+                    // Set positive sentiment
+                    const positivePercentageElement = document.getElementById('positivePercentage');
+                    const positiveBarElement = document.getElementById('positiveBar');
+                    if (positivePercentageElement) {
+                        positivePercentageElement.textContent = `${positivePercentage}%`;
+                    }
+                    if (positiveBarElement) {
+                        positiveBarElement.style.width = `${positivePercentage}%`;
+                    }
+                    
+                    // Set neutral sentiment
+                    const neutralPercentageElement = document.getElementById('neutralPercentage');
+                    const neutralBarElement = document.getElementById('neutralBar');
+                    if (neutralPercentageElement) {
+                        neutralPercentageElement.textContent = `${neutralPercentage}%`;
+                    }
+                    if (neutralBarElement) {
+                        neutralBarElement.style.width = `${neutralPercentage}%`;
+                    }
+                    
+                    // Set negative sentiment
+                    const negativePercentageElement = document.getElementById('negativePercentage');
+                    const negativeBarElement = document.getElementById('negativeBar');
+                    if (negativePercentageElement) {
+                        negativePercentageElement.textContent = `${negativePercentage}%`;
+                    }
+                    if (negativeBarElement) {
+                        negativeBarElement.style.width = `${negativePercentage}%`;
+                    }
+                    
+                    // Update review themes
+                    const positiveThemes = document.getElementById('positiveThemes');
+                    const negativeThemes = document.getElementById('negativeThemes');
+                    
+                    if (positiveThemes) {
+                        positiveThemes.innerHTML = '';
+                        (reviewInsights.positive_themes || []).forEach(theme => {
+                            const li = document.createElement('li');
+                            li.textContent = theme;
+                            positiveThemes.appendChild(li);
+                        });
+                    }
+                    
+                    if (negativeThemes) {
+                        negativeThemes.innerHTML = '';
+                        (reviewInsights.negative_themes || []).forEach(theme => {
+                            const li = document.createElement('li');
+                            li.textContent = theme;
+                            negativeThemes.appendChild(li);
+                        });
+                    }
+                }
+                
+                // Update detailed analysis
+                const detailedAnalysis = document.getElementById('detailedAnalysis');
+                if (detailedAnalysis && data.report?.detailed_analysis) {
+                    detailedAnalysis.innerHTML = data.report.detailed_analysis;
+                }
+
+                // Update persona reviews
+                const reviewsContainer = document.getElementById('personaReviews');
+                if (reviewsContainer) {
+                    console.log('Setting persona reviews:', data.reviews);
+                    reviewsContainer.innerHTML = '';
+                    (data.reviews || []).forEach((review, index) => {
+                        const persona = data.personas[index];
+                        const reviewHtml = `
+                            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="ml-4">
+                                        <h4 class="text-lg font-semibold">${persona?.name || 'Anonymous'}</h4>
+                                        <p class="text-gray-600">Age: ${persona?.demographics?.age || 'N/A'}</p>
+                                        <div class="flex items-center mt-1">
+                                            <span class="text-yellow-500 font-bold mr-2">${review?.rating || 0}/5</span>
+                                            <span class="px-2 py-1 text-xs rounded-full ${
+                                                review?.sentiment === 'positive' ? 'bg-green-100 text-green-800' :
+                                                review?.sentiment === 'negative' ? 'bg-red-100 text-red-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }">${review?.sentiment || 'neutral'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="prose max-w-none">
+                                    ${review?.content || 'No review content available.'}
+                                </div>
+                            </div>
+                        `;
+                        reviewsContainer.insertAdjacentHTML('beforeend', reviewHtml);
+                    });
+                }
+
+                // Show print button
+                const printButton = document.getElementById('printReportBtn');
+                if (printButton) {
+                    printButton.classList.remove('hidden');
+                }
+                
+                console.log('UI update complete');
+            } catch (error) {
+                console.error('Error updating UI:', error);
+                addLogEntry(`Error updating UI: ${error.message}`, 'error');
+            }
+        };
     </script>
     
     <style>

@@ -2,7 +2,7 @@ from typing import Dict, List, Any
 from dataclasses import dataclass
 import datetime
 from src.review.generator import Review
-from src.api.openai_client import OpenAIClient
+from src.api.ai_client import AIClient
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
@@ -26,9 +26,9 @@ class ExpertReport:
 class ExpertAnalyzer:
     """Analyze reviews and generate comprehensive reports with actionable insights."""
     
-    def __init__(self, openai_client: OpenAIClient = None):
-        """Initialize with OpenAI client."""
-        self.openai_client = openai_client
+    def __init__(self, ai_client: AIClient = None):
+        """Initialize with AI client."""
+        self.ai_client = ai_client
         self.reports = []
     
     def analyze(self, url: str, simulation_results: List[Dict[str, Any]], reviews: List[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -588,9 +588,11 @@ class ExpertAnalyzer:
         
         # Findings based on scores
         if scores.get('overall', 0) >= 8:
-            findings.append("The website performs well overall, with high scores across most categories.")
+            findings.append(f"The website performs well overall with a score of {scores.get('overall', 0)}/10, indicating a strong user experience.")
         elif scores.get('overall', 0) <= 4:
-            findings.append("The website has significant issues that need to be addressed urgently.")
+            findings.append(f"The website has significant issues with an overall score of {scores.get('overall', 0)}/10, requiring urgent attention to improve user experience.")
+        else:
+            findings.append(f"The website performs moderately with an overall score of {scores.get('overall', 0)}/10, indicating room for improvement.")
         
         # Find the lowest scoring category
         score_categories = {
@@ -601,39 +603,86 @@ class ExpertAnalyzer:
         
         lowest_category = min(score_categories.keys(), key=lambda k: scores.get(k, 10))
         if scores.get(lowest_category, 0) < 6:
-            findings.append(f"{score_categories[lowest_category]} is the weakest area, requiring immediate attention.")
+            findings.append(f"{score_categories[lowest_category]} is the weakest area with a score of {scores.get(lowest_category, 0)}/10, requiring immediate attention.")
+        
+        # Find the highest scoring category
+        highest_category = max(score_categories.keys(), key=lambda k: scores.get(k, 0))
+        if scores.get(highest_category, 0) >= 7:
+            findings.append(f"{score_categories[highest_category]} is a strength with a score of {scores.get(highest_category, 0)}/10, providing a solid foundation to build upon.")
         
         # Findings based on issues
         critical_issues = categorized_issues.get('critical', [])
         if critical_issues:
             findings.append(f"Found {len(critical_issues)} critical issues that severely impact user experience.")
+            # Add a specific critical issue example
+            if len(critical_issues) > 0:
+                findings.append(f"Critical issue example: {critical_issues[0]}")
         
         # Most problematic category
         issue_categories = ['ui_design', 'navigation', 'product', 'checkout', 'mobile', 'performance', 'accessibility']
-        most_problematic = max(issue_categories, key=lambda k: len(categorized_issues.get(k, [])))
+        category_counts = {k: len(categorized_issues.get(k, [])) for k in issue_categories}
+        sorted_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)
         
-        if categorized_issues.get(most_problematic, []):
+        if sorted_categories and sorted_categories[0][1] > 0:
+            most_problematic = sorted_categories[0][0]
             category_name = most_problematic.replace('_', ' ').title()
-            findings.append(f"{category_name} has the most issues ({len(categorized_issues.get(most_problematic, []))}), indicating a problem area.")
+            findings.append(f"{category_name} has the most issues ({sorted_categories[0][1]}), indicating a problem area.")
+            
+            # Add a specific example from the most problematic category
+            if categorized_issues.get(most_problematic, []):
+                findings.append(f"{category_name} issue example: {categorized_issues.get(most_problematic, [])[0]}")
+        
+        # Second most problematic category if it exists
+        if len(sorted_categories) > 1 and sorted_categories[1][1] > 0:
+            second_problematic = sorted_categories[1][0]
+            category_name = second_problematic.replace('_', ' ').title()
+            findings.append(f"{category_name} is also problematic with {sorted_categories[1][1]} issues identified.")
         
         # Findings based on behavioral insights
         if behavioral_insights:
             # Engagement level finding
-            primary_engagement = behavioral_insights.get('primary_engagement_level', '')
-            if primary_engagement == 'low':
-                findings.append("Users show low engagement with the website, suggesting content or design issues.")
-            elif primary_engagement == 'high':
-                findings.append("Users show high engagement with the website, indicating compelling content or features.")
+            engagement_levels = behavioral_insights.get('engagement_levels', [])
+            if engagement_levels:
+                high_count = engagement_levels.count('high')
+                low_count = engagement_levels.count('low')
+                total_count = len(engagement_levels)
+                
+                if total_count > 0:
+                    high_pct = (high_count / total_count) * 100
+                    low_pct = (low_count / total_count) * 100
+                    
+                    if high_pct >= 60:
+                        findings.append(f"Strong user engagement detected ({high_pct:.0f}% high engagement), indicating compelling content or features.")
+                    elif low_pct >= 50:
+                        findings.append(f"Low user engagement detected ({low_pct:.0f}% low engagement), suggesting content or design issues.")
             
             # Pain points finding
             common_pain_points = behavioral_insights.get('common_pain_points', [])
             if common_pain_points:
                 findings.append(f"Common user pain points include: {common_pain_points[0]}")
+                if len(common_pain_points) > 1:
+                    findings.append(f"Additional pain point: {common_pain_points[1]}")
             
             # Areas of interest finding
             areas_of_interest = behavioral_insights.get('areas_of_interest', [])
             if areas_of_interest:
                 findings.append(f"Users show particular interest in: {areas_of_interest[0]}")
+        
+        # Findings based on failed actions
+        failed_actions = []
+        for result in simulation_results:
+            failed_actions.extend(result.get('failed_actions', []))
+        
+        if failed_actions:
+            # Count occurrences of each failed action
+            from collections import Counter
+            failed_action_counts = Counter(failed_actions)
+            most_common_failures = failed_action_counts.most_common(2)
+            
+            if most_common_failures:
+                findings.append(f"Most common failed action: {most_common_failures[0][0]} (occurred {most_common_failures[0][1]} times)")
+                if len(most_common_failures) > 1:
+                    findings.append(f"Second most common failed action: {most_common_failures[1][0]} (occurred {most_common_failures[1][1]} times)")
         
         # Findings based on AI reviews
         if ai_review_insights:
@@ -654,9 +703,19 @@ class ExpertAnalyzer:
                     findings.append(f"Strong positive sentiment ({positive_pct:.0f}%) across persona reviews.")
                 elif negative_pct >= 50:
                     findings.append(f"Concerning negative sentiment ({negative_pct:.0f}%) across persona reviews.")
+            
+            # Add specific themes from reviews
+            positive_themes = ai_review_insights.get('positive_themes', [])
+            negative_themes = ai_review_insights.get('negative_themes', [])
+            
+            if positive_themes:
+                findings.append(f"Top positive theme from reviews: {positive_themes[0]}")
+            
+            if negative_themes:
+                findings.append(f"Top negative theme from reviews: {negative_themes[0]}")
         
-        # Limit to top 10 findings
-        return findings[:10]
+        # Limit to top 15 findings
+        return findings[:15]
     
     def _generate_recommendations(self, simulation_results: List[Dict[str, Any]], 
                                  categorized_issues: Dict[str, List[str]],
@@ -665,12 +724,31 @@ class ExpertAnalyzer:
         """Generate prioritized recommendations based on analysis."""
         recommendations = []
         
+        # Extract failed actions for more specific recommendations
+        failed_actions = []
+        for result in simulation_results:
+            failed_actions.extend(result.get('failed_actions', []))
+        
+        # Count occurrences of each failed action
+        from collections import Counter
+        failed_action_counts = Counter(failed_actions)
+        most_common_failures = failed_action_counts.most_common(3)
+        
         # Recommendations based on critical issues
         critical_issues = categorized_issues.get('critical', [])
         if critical_issues:
-            recommendations.append(f"CRITICAL: Fix the {len(critical_issues)} critical issues, starting with: {critical_issues[0]}")
+            for i, issue in enumerate(critical_issues[:3]):
+                if i == 0:
+                    recommendations.append(f"CRITICAL: Fix the highest priority issue: {issue}")
+                else:
+                    recommendations.append(f"CRITICAL: Address critical issue: {issue}")
         
-        # Recommendations by category
+        # Recommendations based on most common failed actions
+        if most_common_failures:
+            for action, count in most_common_failures:
+                recommendations.append(f"HIGH: Fix the failed action that occurred {count} times: {action}")
+        
+        # Recommendations by category with specific issues
         for category, issues in categorized_issues.items():
             if category in ['critical', 'major', 'minor']:
                 continue
@@ -679,54 +757,91 @@ class ExpertAnalyzer:
                 category_name = category.replace('_', ' ').title()
                 if len(issues) > 3:
                     recommendations.append(f"HIGH: Improve {category_name} by addressing the {len(issues)} identified issues")
+                    # Add specific examples
+                    for i, issue in enumerate(issues[:2]):
+                        recommendations.append(f"  - {category_name} improvement: {issue}")
                 elif issues:
-                    recommendations.append(f"MEDIUM: Address {category_name} issues: {issues[0]}")
+                    for i, issue in enumerate(issues[:2]):
+                        priority = "HIGH" if i == 0 else "MEDIUM"
+                        recommendations.append(f"{priority}: Address {category_name} issue: {issue}")
         
         # Recommendations based on behavioral insights
         if behavioral_insights:
             pain_points = behavioral_insights.get('common_pain_points', [])
             if pain_points:
-                recommendations.append(f"HIGH: Address user pain points, particularly: {pain_points[0]}")
+                for i, point in enumerate(pain_points[:2]):
+                    priority = "HIGH" if i == 0 else "MEDIUM"
+                    recommendations.append(f"{priority}: Address user pain point: {point}")
             
             form_issues = behavioral_insights.get('form_completion_issues', [])
             if form_issues:
-                recommendations.append(f"MEDIUM: Improve form usability to address: {form_issues[0]}")
+                for i, issue in enumerate(form_issues[:2]):
+                    priority = "MEDIUM" if i == 0 else "LOW"
+                    recommendations.append(f"{priority}: Improve form usability to address: {issue}")
             
             # If engagement is low, recommend improvements
-            if behavioral_insights.get('primary_engagement_level') == 'low':
-                recommendations.append("HIGH: Improve overall engagement by enhancing interactive elements and content relevance")
+            engagement_levels = behavioral_insights.get('engagement_levels', [])
+            if engagement_levels:
+                low_count = engagement_levels.count('low')
+                total_count = len(engagement_levels)
+                
+                if total_count > 0 and (low_count / total_count) >= 0.4:
+                    recommendations.append("HIGH: Improve overall engagement by enhancing interactive elements and content relevance")
+            
+            # Recommendations based on areas of interest
+            areas_of_interest = behavioral_insights.get('areas_of_interest', [])
+            if areas_of_interest:
+                recommendations.append(f"MEDIUM: Enhance the most popular area of interest: {areas_of_interest[0]}")
         
         # Recommendations based on AI reviews
         if ai_review_insights:
             negative_themes = ai_review_insights.get('negative_themes', [])
             if negative_themes:
-                recommendations.append(f"HIGH: Address common negative feedback: {negative_themes[0]}")
+                for i, theme in enumerate(negative_themes[:2]):
+                    priority = "HIGH" if i == 0 else "MEDIUM"
+                    recommendations.append(f"{priority}: Address common negative feedback: {theme}")
             
-            # Look for persona correlations
-            persona_correlations = ai_review_insights.get('persona_correlations', [])
-            low_tech_ratings = [p for p in persona_correlations if p.get('tech_proficiency', 10) < 5 and p.get('rating', 5) < 3]
-            
-            if low_tech_ratings:
-                recommendations.append("MEDIUM: Improve usability for less tech-savvy users who reported negative experiences")
-            
-            # If average rating is low, recommend comprehensive review
-            if ai_review_insights.get('average_rating', 5) < 2.5:
-                recommendations.append("CRITICAL: Conduct a comprehensive UX review as persona ratings indicate significant issues")
+            positive_themes = ai_review_insights.get('positive_themes', [])
+            if positive_themes:
+                recommendations.append(f"MEDIUM: Leverage and expand on positive aspect: {positive_themes[0]}")
         
-        # Add general recommendations if we don't have many specific ones
-        if len(recommendations) < 5:
-            general_recommendations = [
-                "MEDIUM: Implement A/B testing to validate design changes and improvements",
-                "LOW: Consider adding user onboarding elements to guide new visitors",
-                "MEDIUM: Review mobile responsiveness across different device sizes",
-                "LOW: Enhance product photography and descriptions for better presentation",
-                "MEDIUM: Optimize page load times, especially for product and category pages"
-            ]
-            
-            recommendations.extend(general_recommendations[:5 - len(recommendations)])
+        # Add specific UX improvement recommendations
+        ui_issues = categorized_issues.get('ui_design', [])
+        if ui_issues:
+            recommendations.append("HIGH: Implement consistent design patterns across the website to improve user experience")
+            recommendations.append("MEDIUM: Ensure all interactive elements have clear affordances (visual cues that indicate they are clickable)")
         
-        # Limit to top 10 recommendations
-        return recommendations[:10]
+        navigation_issues = categorized_issues.get('navigation', [])
+        if navigation_issues:
+            recommendations.append("HIGH: Simplify the navigation structure to reduce cognitive load")
+            recommendations.append("MEDIUM: Ensure breadcrumbs are present on all pages to help users understand their location")
+        
+        # Add mobile-specific recommendations if there are mobile issues
+        mobile_issues = categorized_issues.get('mobile', [])
+        if mobile_issues:
+            recommendations.append("HIGH: Optimize tap targets for mobile users (minimum size 44x44 pixels)")
+            recommendations.append("MEDIUM: Ensure all content is accessible without horizontal scrolling on mobile devices")
+        
+        # Add accessibility recommendations if there are accessibility issues
+        accessibility_issues = categorized_issues.get('accessibility', [])
+        if accessibility_issues:
+            recommendations.append("HIGH: Ensure proper color contrast ratios (minimum 4.5:1) for all text content")
+            recommendations.append("MEDIUM: Add proper alt text to all images to support screen reader users")
+        
+        # Add performance recommendations if there are performance issues
+        performance_issues = categorized_issues.get('performance', [])
+        if performance_issues:
+            recommendations.append("HIGH: Optimize image sizes and implement lazy loading for improved page load times")
+            recommendations.append("MEDIUM: Minimize JavaScript and CSS files to reduce initial load time")
+        
+        # Add checkout recommendations if there are checkout issues
+        checkout_issues = categorized_issues.get('checkout', [])
+        if checkout_issues:
+            recommendations.append("CRITICAL: Simplify the checkout process to reduce abandonment rate")
+            recommendations.append("HIGH: Provide clear error messages and field validation during checkout")
+        
+        # Limit to top 20 recommendations
+        return recommendations[:20]
     
     def _generate_detailed_analysis(self, website_url: str, 
                                    simulation_results: List[Dict[str, Any]], 
@@ -736,7 +851,7 @@ class ExpertAnalyzer:
                                    ai_review_insights: Dict[str, Any]) -> str:
         """Generate a detailed analysis report using OpenAI if available, or fallback to template-based."""
         # If OpenAI client is available, use it for a more nuanced analysis
-        if self.openai_client:
+        if self.ai_client:
             try:
                 # Prepare the prompt with all our data
                 prompt = self._prepare_analysis_prompt(
@@ -749,7 +864,7 @@ class ExpertAnalyzer:
                 )
                 
                 # Get the analysis from OpenAI
-                response = self.openai_client.generate_text(prompt)
+                response = self.ai_client.generate_text(prompt)
                 if response:
                     return response
             except Exception as e:
@@ -877,55 +992,150 @@ class ExpertAnalyzer:
         design_score = scores.get('design_score', 0)
         findability_score = scores.get('findability_score', 0)
         
+        # Extract all issues for more comprehensive analysis
         critical_issues = categorized_issues.get('critical', [])
         major_issues = categorized_issues.get('major', [])
+        ui_issues = categorized_issues.get('ui_design', [])
+        navigation_issues = categorized_issues.get('navigation', [])
+        product_issues = categorized_issues.get('product', [])
+        checkout_issues = categorized_issues.get('checkout', [])
+        mobile_issues = categorized_issues.get('mobile', [])
+        accessibility_issues = categorized_issues.get('accessibility', [])
+        
+        # Extract successful and failed actions from simulation results
+        successful_actions = []
+        failed_actions = []
+        for result in simulation_results:
+            successful_actions.extend(result.get('successful_actions', []))
+            failed_actions.extend(result.get('failed_actions', []))
         
         # Format behavioral insights
         behavior_text = ""
         if behavioral_insights:
+            pain_points = behavioral_insights.get('common_pain_points', ['None'])
+            areas_of_interest = behavioral_insights.get('areas_of_interest', ['None'])
+            navigation_patterns = behavioral_insights.get('navigation_patterns', ['None'])
+            
             behavior_text = f"""
             Behavioral data shows {behavioral_insights.get('primary_engagement_level', 'medium')} engagement 
             with {behavioral_insights.get('primary_experience', 'neutral')} overall experience.
             
-            Common pain points: {', '.join(behavioral_insights.get('common_pain_points', ['None'])[:3])}
-            Areas of interest: {', '.join(behavioral_insights.get('areas_of_interest', ['None'])[:3])}
+            Common pain points: {', '.join(pain_points[:5])}
+            Areas of interest: {', '.join(areas_of_interest[:5])}
+            Navigation patterns: {', '.join(navigation_patterns[:5])}
             """
         
         # Format AI review insights
         review_text = ""
         if ai_review_insights:
+            positive_themes = ai_review_insights.get('positive_themes', ['None'])
+            negative_themes = ai_review_insights.get('negative_themes', ['None'])
+            
+            sentiment_dist = ai_review_insights.get('sentiment_distribution', {})
+            positive_pct = sentiment_dist.get('positive', 0)
+            neutral_pct = sentiment_dist.get('neutral', 0)
+            negative_pct = sentiment_dist.get('negative', 0)
+            
             review_text = f"""
             AI-generated persona reviews give an average rating of {ai_review_insights.get('average_rating', 0)}/5.
+            Sentiment distribution: {positive_pct}% positive, {neutral_pct}% neutral, {negative_pct}% negative.
             
-            Positive themes: {', '.join(ai_review_insights.get('positive_themes', ['None'])[:3])}
-            Negative themes: {', '.join(ai_review_insights.get('negative_themes', ['None'])[:3])}
+            Positive themes: {', '.join(positive_themes[:5])}
+            Negative themes: {', '.join(negative_themes[:5])}
             """
         
-        # Build the prompt
+        # Build the prompt with the new template structure
         prompt = f"""
-        You are an expert e-commerce UX analyst. Write a detailed, professional analysis report for {website_url}.
+        You are an expert e-commerce UX analyst and product consultant with 15+ years of experience. Write a detailed, professional analysis report for {website_url}.
         
-        The analysis is based on simulations with {num_personas} different user personas.
+        The analysis is based on simulations with {num_personas} different user personas, capturing a range of user experiences and perspectives.
         
+        ## Scores
         Overall Score: {overall_score}/10
         Navigation Score: {navigation_score}/10
         Design Score: {design_score}/10
         Findability Score: {findability_score}/10
         
-        Critical Issues ({len(critical_issues)}): {', '.join(critical_issues[:3]) if critical_issues else 'None'}
-        Major Issues ({len(major_issues)}): {', '.join(major_issues[:3]) if major_issues else 'None'}
+        ## Issues Summary
+        Critical Issues ({len(critical_issues)}): {', '.join(critical_issues) if critical_issues else 'None'}
+        Major Issues ({len(major_issues)}): {', '.join(major_issues) if major_issues else 'None'}
+        UI Design Issues ({len(ui_issues)}): {', '.join(ui_issues[:5]) if ui_issues else 'None'}
+        Navigation Issues ({len(navigation_issues)}): {', '.join(navigation_issues[:5]) if navigation_issues else 'None'}
+        Product Issues ({len(product_issues)}): {', '.join(product_issues[:5]) if product_issues else 'None'}
+        Checkout Issues ({len(checkout_issues)}): {', '.join(checkout_issues[:5]) if checkout_issues else 'None'}
+        Mobile Issues ({len(mobile_issues)}): {', '.join(mobile_issues[:5]) if mobile_issues else 'None'}
+        Accessibility Issues ({len(accessibility_issues)}): {', '.join(accessibility_issues[:5]) if accessibility_issues else 'None'}
+        
+        ## User Interactions
+        Successful Actions: {', '.join(successful_actions[:10]) if successful_actions else 'None'}
+        Failed Actions: {', '.join(failed_actions[:10]) if failed_actions else 'None'}
         
         {behavior_text}
         
         {review_text}
         
-        Write a comprehensive analysis that:
-        1. Evaluates the website's strengths and weaknesses
-        2. Analyzes the impact of identified issues on different user types
-        3. Provides context for the scores and behavioral data
-        4. Offers strategic insights about what these findings mean for the business
+        Write a comprehensive, specific, and actionable analysis following this structure:
         
-        Format your response as a professional report with markdown headings and bullet points.
+        # Expert UX & Product Analysis Report for {website_url}
+        Date: {datetime.datetime.now().strftime('%B %d, %Y')}
+        Prepared by: AI-Powered UX and Product Expert
+        
+        ## 1. Introduction
+        Write a brief introduction about the website and the purpose of this analysis. Mention that the report examines four critical user journeys on the e-commerce website:
+        - Discover a Product
+        - Search a Product
+        - Add a Product to Shopping Cart
+        - Make a Transaction
+        
+        Explain that the analysis focuses on the overall user experience, identifying potential friction points and areas for improvement. By optimizing these journeys, businesses can enhance customer satisfaction, increase conversion rates, and drive long-term loyalty.
+        
+        ## 2. User Journey Analysis
+        
+        ### A. Discover a Product
+        Analyze how users discover products on the website, including:
+        - Visual Hierarchy & Layout: Evaluate if featured products and promotions are prominently displayed and if there's a clear visual path.
+        - Call-to-Action (CTA) Clarity: Assess if CTAs are clear and compelling.
+        - Personalization: Evaluate mechanisms for tailoring product suggestions.
+        
+        Provide specific recommendations for improving product discovery with concrete examples from the data.
+        
+        ### B. Search a Product
+        Analyze the search functionality, including:
+        - Search Functionality & Speed: Evaluate accessibility and performance of the search feature.
+        - Relevance of Results: Assess if search results match query intent.
+        - Filtering & Sorting Options: Evaluate the intuitiveness of filters and sorting mechanisms.
+        
+        Provide specific recommendations for improving search functionality with concrete examples from the data.
+        
+        ### C. Add a Product to Shopping Cart
+        Analyze the process of adding products to cart, including:
+        - Button Visibility & Placement: Evaluate if the "Add to Cart" button is noticeable and accessible.
+        - User Feedback: Assess if the system provides instant feedback after a product is added.
+        - Cart Accessibility: Evaluate if the cart is easily accessible throughout the shopping journey.
+        
+        Provide specific recommendations for improving the add-to-cart process with concrete examples from the data.
+        
+        ### D. Make a Transaction
+        Analyze the checkout process, including:
+        - Checkout Flow Complexity: Evaluate if the process is streamlined.
+        - Form Usability: Assess if form fields are clearly labeled and if error handling is robust.
+        - Trust & Security Signals: Evaluate if security icons and trust badges are prominently displayed.
+        
+        Provide specific recommendations for improving the checkout process with concrete examples from the data.
+        
+        ## 3. Summary of Recommendations
+        Summarize the key recommendations across all user journeys, organized by priority:
+        - Critical: Issues that must be addressed immediately
+        - High Priority: Important improvements that will significantly impact user experience
+        - Medium Priority: Valuable enhancements to implement after addressing critical and high-priority items
+        - Low Priority: Nice-to-have improvements for future consideration
+        
+        For each recommendation, provide:
+        - Specific action items
+        - Expected impact on user experience and business metrics
+        - Implementation complexity (Low, Medium, High)
+        
+        Format your response as a professional report with markdown headings and bullet points. Use specific examples from the data throughout your analysis.
         """
         
         return prompt

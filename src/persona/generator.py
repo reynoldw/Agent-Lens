@@ -1,7 +1,7 @@
 import random
 from typing import List, Dict
 from dataclasses import dataclass
-from src.api.openai_client import OpenAIClient
+from src.api.ai_client import AIClient
 
 @dataclass
 class Persona:
@@ -21,9 +21,9 @@ class Persona:
 class PersonaGenerator:
     """Generate realistic user personas for website evaluation."""
     
-    def __init__(self, openai_client: OpenAIClient = None):
-        """Initialize with OpenAI client."""
-        self.openai_client = openai_client
+    def __init__(self, ai_client: AIClient = None):
+        """Initialize with AI client."""
+        self.ai_client = ai_client
         self.personas = []
         
         # Define possible values for persona attributes
@@ -35,6 +35,10 @@ class PersonaGenerator:
     
     def generate(self) -> dict:
         """Generate a single persona with e-commerce specific attributes."""
+        # If no AI client is available, generate a random persona
+        if not self.ai_client:
+            return self._generate_random_persona()
+            
         prompt = """
         Create a detailed e-commerce shopper persona with the following attributes:
         
@@ -49,68 +53,229 @@ class PersonaGenerator:
            - Education level (High School, Bachelor's, Master's, PhD)
         
         2. Shopping Behavior:
-           - Shopping frequency (daily, weekly, monthly)
-           - Average order value (in USD)
-           - Price sensitivity (budget, mid-range, luxury)
-           - Brand loyalty (loyal to brands or price-driven)
-           - Research behavior (impulse buyer vs. extensive researcher)
-        
+           - Shopping frequency (Daily, Weekly, Monthly, Rarely)
+           - Preferred product categories (at least 2-3 specific categories)
+           - Price sensitivity (Low, Medium, High)
+           - Brand loyalty (Low, Medium, High)
+           - Research behavior (Minimal, Moderate, Extensive)
+           
         3. Technical Profile:
-           - Devices used (mobile, tablet, desktop, percentages of each)
-           - Technical proficiency (specific number on 1-10 scale)
+           - Tech proficiency (1-10 scale, where 10 is expert)
+           - Devices used for shopping (Desktop, Mobile, Tablet, with percentages)
+           - Preferred payment methods (at least 2)
            - Social media usage (platforms and frequency)
-           - Preferred payment methods (credit card, PayPal, etc.)
-        
-        4. E-commerce Specific:
-           - Product categories of interest (specific categories)
-           - Previous online shopping experience (specific number on 1-10 scale)
-           - Patience level for website issues (specific number on 1-10 scale)
-           - Importance of reviews/ratings (specific number on 1-10 scale)
-           - Importance of shipping speed/cost (specific number on 1-10 scale)
-        
-        5. Accessibility Needs:
-           - Any visual, motor, or cognitive considerations (be specific)
-        
-        6. Shopping Goals:
-           - Primary goal for visiting an e-commerce site
-           - Secondary objectives
-           - Success criteria for a shopping experience
-        
-        Return as a JSON object with these exact fields. Do not include any explanatory text outside the JSON.
+           - Accessibility needs (if any)
+           
+        4. Goals and Pain Points:
+           - Primary shopping goal
+           - Secondary shopping goal
+           - Major frustrations with online shopping
+           - Features they value most
+           
+        Format the response as a JSON object with these exact keys:
+        {
+          "name": "",
+          "demographics": {
+            "age": 0,
+            "gender": "",
+            "location": "",
+            "occupation": "",
+            "income": "",
+            "family_status": "",
+            "education": ""
+          },
+          "shopping": {
+            "frequency": "",
+            "categories": [],
+            "price_sensitivity": "",
+            "brand_loyalty": "",
+            "research_behavior": ""
+          },
+          "technical": {
+            "proficiency": 0,
+            "devices": {},
+            "payment_methods": [],
+            "social_media": {},
+            "accessibility_needs": []
+          },
+          "goals": {
+            "primary": "",
+            "secondary": "",
+            "frustrations": [],
+            "valued_features": []
+          }
+        }
         """
         
         try:
-            response = self.openai_client.generate_text(prompt)
+            response = self.ai_client.generate_text(prompt)
             
             # Process the response to ensure it's valid JSON
             import json
             import re
             
-            # Extract JSON if it's wrapped in markdown code blocks
-            json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response)
+            # Extract JSON from the response (in case there's additional text)
+            json_match = re.search(r'({[\s\S]*})', response)
             if json_match:
                 json_str = json_match.group(1)
+                try:
+                    persona = json.loads(json_str)
+                    # Add a unique ID
+                    persona['id'] = f"persona_{len(self.personas) + 1}"
+                    self.personas.append(persona)
+                    return persona
+                except json.JSONDecodeError:
+                    # If JSON parsing fails, fall back to random generation
+                    return self._generate_random_persona()
             else:
-                json_str = response
+                # If no JSON found, fall back to random generation
+                return self._generate_random_persona()
                 
-            # Clean up any non-JSON text
-            json_str = re.sub(r'^[^{]*', '', json_str)
-            json_str = re.sub(r'[^}]*$', '', json_str)
-            
-            try:
-                persona = json.loads(json_str)
-                
-                # Validate and provide defaults for essential fields
-                self._validate_and_fix_persona(persona)
-                
-                return persona
-            except json.JSONDecodeError as e:
-                print(f"Error parsing persona JSON: {e}")
-                print(f"Raw JSON string: {json_str}")
-                return self._generate_fallback_persona()
         except Exception as e:
-            print(f"Error generating persona: {e}")
-            return self._generate_fallback_persona()
+            # If AI generation fails, fall back to random generation
+            return self._generate_random_persona()
+            
+    def _generate_random_persona(self) -> dict:
+        """Generate a random persona when AI generation is not available."""
+        import random
+        
+        # Generate a random name
+        first_names = ["John", "Jane", "Michael", "Emily", "David", "Sarah", "Robert", "Lisa", "William", "Emma"]
+        last_names = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor"]
+        name = f"{random.choice(first_names)} {random.choice(last_names)}"
+        
+        # Generate random demographics
+        age = random.randint(18, 75)
+        gender = random.choice(self.genders)
+        locations = ["New York, USA", "London, UK", "Toronto, Canada", "Sydney, Australia", "Berlin, Germany"]
+        location = random.choice(locations)
+        
+        occupations = ["Software Developer", "Teacher", "Marketing Manager", "Doctor", "Student", "Retired", "Sales Representative"]
+        occupation = random.choice(occupations)
+        
+        income_levels = ["Low ($30,000)", "Medium ($60,000)", "High ($100,000+)"]
+        income = random.choice(income_levels)
+        
+        family_statuses = ["Single", "Married", "Married with children", "Single parent", "Divorced"]
+        family_status = random.choice(family_statuses)
+        
+        education = random.choice(self.education_levels)
+        
+        # Generate random shopping behavior
+        frequency = random.choice(self.shopping_frequencies)
+        num_categories = random.randint(2, 4)
+        categories = random.sample(self.categories, num_categories)
+        
+        sensitivity_levels = ["Low", "Medium", "High"]
+        price_sensitivity = random.choice(sensitivity_levels)
+        brand_loyalty = random.choice(sensitivity_levels)
+        
+        research_behaviors = ["Minimal", "Moderate", "Extensive"]
+        research_behavior = random.choice(research_behaviors)
+        
+        # Generate random technical profile
+        proficiency = random.randint(1, 10)
+        
+        devices = {
+            "Desktop": random.randint(0, 100),
+            "Mobile": random.randint(0, 100),
+            "Tablet": random.randint(0, 100)
+        }
+        # Normalize to 100%
+        total = sum(devices.values())
+        devices = {k: round(v / total * 100) for k, v in devices.items()}
+        
+        payment_methods = random.sample(["Credit Card", "PayPal", "Apple Pay", "Google Pay", "Bank Transfer"], random.randint(1, 3))
+        
+        social_platforms = ["Facebook", "Instagram", "Twitter", "LinkedIn", "TikTok"]
+        social_media = {platform: random.choice(["Never", "Rarely", "Sometimes", "Often", "Daily"]) 
+                        for platform in random.sample(social_platforms, random.randint(1, 4))}
+        
+        num_accessibility_needs = random.randint(0, 2)
+        accessibility_needs = random.sample(self.accessibility_needs, num_accessibility_needs)
+        if "None" in accessibility_needs and len(accessibility_needs) > 1:
+            accessibility_needs.remove("None")
+        
+        # Generate random goals and pain points
+        primary_goals = [
+            "Find a specific product",
+            "Browse for deals",
+            "Research options before buying",
+            "Make a quick purchase",
+            "Check prices"
+        ]
+        primary_goal = random.choice(primary_goals)
+        
+        secondary_goals = [
+            "Compare prices across sites",
+            "Read reviews",
+            "Find discount codes",
+            "Check shipping options",
+            "Learn about return policies"
+        ]
+        secondary_goal = random.choice(secondary_goals)
+        
+        frustrations = [
+            "Slow loading pages",
+            "Complicated checkout process",
+            "Limited payment options",
+            "Poor product descriptions",
+            "Difficult navigation",
+            "Hidden shipping costs",
+            "Lack of customer reviews"
+        ]
+        num_frustrations = random.randint(1, 3)
+        selected_frustrations = random.sample(frustrations, num_frustrations)
+        
+        valued_features = [
+            "Fast checkout",
+            "Detailed product information",
+            "Customer reviews",
+            "Easy navigation",
+            "Clear return policy",
+            "Multiple payment options",
+            "Free shipping"
+        ]
+        num_features = random.randint(1, 3)
+        selected_features = random.sample(valued_features, num_features)
+        
+        # Create the persona dictionary
+        persona = {
+            "id": f"persona_{len(self.personas) + 1}",
+            "name": name,
+            "demographics": {
+                "age": age,
+                "gender": gender,
+                "location": location,
+                "occupation": occupation,
+                "income": income,
+                "family_status": family_status,
+                "education": education
+            },
+            "shopping": {
+                "frequency": frequency,
+                "categories": categories,
+                "price_sensitivity": price_sensitivity,
+                "brand_loyalty": brand_loyalty,
+                "research_behavior": research_behavior
+            },
+            "technical": {
+                "proficiency": proficiency,
+                "devices": devices,
+                "payment_methods": payment_methods,
+                "social_media": social_media,
+                "accessibility_needs": accessibility_needs
+            },
+            "goals": {
+                "primary": primary_goal,
+                "secondary": secondary_goal,
+                "frustrations": selected_frustrations,
+                "valued_features": selected_features
+            }
+        }
+        
+        self.personas.append(persona)
+        return persona
     
     def _validate_and_fix_persona(self, persona):
         """Validate persona data and fill in defaults for missing fields."""
@@ -302,7 +467,7 @@ class PersonaGenerator:
         """
         
         try:
-            response = self.openai_client.generate_text(prompt)
+            response = self.ai_client.generate_text(prompt)
             return response.strip()
         except Exception as e:
             print(f"Failed to generate narrative: {e}")
