@@ -149,16 +149,6 @@ Our immediate focus is on improving the simulation functionality:
 4. **A/B Testing**: Implementing comparison features for evaluating design alternatives
 5. **Historical Tracking**: Adding support for tracking website improvements over time
 
-## 📚 Documentation
-
-For more detailed information, please refer to the following documentation:
-
-- [Architecture Overview](docs/architecture.md)
-- [Persona Generation](docs/personas.md)
-- [Simulation Process](docs/simulation.md)
-- [Analysis Methodology](docs/analysis.md)
-- [API Reference](docs/api.md)
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
