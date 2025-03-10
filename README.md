@@ -1,10 +1,35 @@
 # AgentReviewHub
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![Version](https://img.shields.io/badge/version-1.3.0-blue)
 ![Python](https://img.shields.io/badge/python-3.8%2B-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 **AgentReviewHub** is an AI-powered platform that evaluates websites through the lens of diverse simulated user personas. By combining advanced AI agents, browser automation, and expert analysis, it provides comprehensive insights into website usability, design, and user experience.
+
+## 🆕 Recent Updates
+
+### Version 1.3.0 (March 9 2025)
+- **Enhanced Reporting UI**: Completely redesigned key findings and recommendations with journey-based structure
+- **Improved Error Handling**: Better browser pool management and resource cleanup
+- **More Human-Readable Reports**: Simplified language in reports for better clarity
+- **Print-Optimized Styling**: Reports now print beautifully for sharing
+
+### Version 1.2.0 (March 8 2025)
+- **Enhanced Persona Modeling**: Evolved from simple profiles to dynamic representations with behavioral traits
+  - Simulates realistic user behaviors like distractions and delays
+  - Adjusts interaction patterns based on technical proficiency and age
+  - Creates more authentic shopping experiences for each persona
+
+- **Advanced Website Browsing Simulations**: Implemented four key shopping journeys
+  - **Discover a Product**: Automatically tailored to the website's content
+  - **Search for a Product**: Simulates realistic search behaviors
+  - **Add a Product to Shopping Cart**: Tests critical conversion paths
+  - **Complete a Transaction**: Evaluates the entire checkout process
+
+- **Support for Anthropic Claude 3 Models**: Added compatibility with the latest AI models
+- **Multi-persona Evaluation Capabilities**: Enhanced parallel testing with diverse personas
+
+See the [CHANGELOG.md](CHANGELOG.md) for complete release history.
 
 ## 🤖 AI Model Support
 - OpenAI GPT-4 and GPT-3.5 Models
