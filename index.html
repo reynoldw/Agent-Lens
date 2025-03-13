@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AgentReviewHub - Revolutionize Your Product Reviews</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Reset & Basic Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            overflow-x: hidden;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Header */
+        header {
+            background: rgba(26, 31, 53, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        header .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        header .logo i {
+            font-size: 2rem;
+            color: #ED64A6;
+        }
+        header nav a {
+            margin-left: 1.5rem;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            transition: color 0.3s;
+        }
+        header nav a:hover {
+            color: #ED64A6;
+        }
+        header .cta-buttons a {
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid #ED64A6;
+            border-radius: 4px;
+            transition: all 0.3s;
+            color: #fff;
+        }
+        header .cta-buttons a:hover {
+            background: #ED64A6;
+            color: #fff;
+        }
+
+        /* Hero Section */
+        #hero {
+            background: linear-gradient(135deg, #1a1f35, #2d3748);
+            color: #fff;
+            min-height: 100vh;
+            padding: 6rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Animated Background */
+        #hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Floating Elements */
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(100px, 100px) rotate(180deg); }
+            100% { transform: translate(0, 0) rotate(360deg); }
+        }
+
+        #hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.1); }
+            50% { text-shadow: 0 0 30px rgba(255, 255, 255, 0.2); }
+            100% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.1); }
+        }
+
+        #hero p {
+            font-size: 1.4rem;
+            margin-bottom: 2.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            z-index: 1;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        #hero .btn-primary {
+            background: linear-gradient(45deg, #ED64A6, #D53F8C);
+            color: #fff;
+            padding: 1.2rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 15px rgba(237, 100, 166, 0.3);
+            overflow: hidden;
+        }
+
+        #hero .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        #hero .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        #hero .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(237, 100, 166, 0.4);
+        }
+
+        /* Interactive Demo Section */
+        .demo-section {
+            margin-top: 4rem;
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .demo-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .demo-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .demo-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .demo-card i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #ED64A6;
+        }
+
+        .demo-card h3 {
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-card p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            header nav {
+                margin: 1rem 0;
+            }
+            header .cta-buttons {
+                margin-top: 1rem;
+            }
+            #hero h1 {
+                font-size: 2.5rem;
+            }
+            #hero p {
+                font-size: 1.1rem;
+            }
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Value Proposition Section */
+        #value-prop {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #1a1f35, #2d3748);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #value-prop::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        #value-prop h2 {
+            font-size: 2.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #value-prop p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+        }
+
+        #value-prop .icons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        #value-prop .icon-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #value-prop .icon-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: 0.5s;
+        }
+
+        #value-prop .icon-card:hover::before {
+            left: 100%;
+        }
+
+        #value-prop .icon-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        #value-prop .icon-card i {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: #ED64A6;
+            transition: all 0.3s;
+        }
+
+        #value-prop .icon-card:hover i {
+            transform: scale(1.1);
+            color: #D53F8C;
+        }
+
+        #value-prop .icon-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        #value-prop .icon-card p {
+            font-size: 1rem;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Input Section */
+        #input-section {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #2d3748, #1a1f35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #input-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        #input-section .form-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        #input-section h2 {
+            font-size: 2.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #fff;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #input-section form {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        #input-section label {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        #input-section input[type=text],
+        #input-section select,
+        #input-section textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        #input-section input[type=text]:focus,
+        #input-section select:focus,
+        #input-section textarea:focus {
+            outline: none;
+            border-color: #ED64A6;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(237, 100, 166, 0.2);
+        }
+
+        #input-section textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        #input-section .persona-container {
+            margin-top: 3rem;
+        }
+
+        #input-section .persona-container h3 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #fff;
+        }
+
+        .persona-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .persona-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .persona-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .persona-card.active {
+            background: rgba(237, 100, 166, 0.1);
+            border-color: #ED64A6;
+        }
+
+        .persona-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .persona-desc {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+        }
+
+        .clip-animation {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+        }
+
+        .persona-card.active .clip-animation {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .upcoming-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: default;
+        }
+
+        .upcoming-card:hover {
+            transform: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #input-section .subscription {
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        #input-section .subscription p {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+        }
+
+        #input-section .subscription button {
+            background: linear-gradient(45deg, #ED64A6, #D53F8C);
+            color: #fff;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(237, 100, 166, 0.3);
+        }
+
+        #input-section .subscription button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(237, 100, 166, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            #value-prop h2,
+            #input-section h2 {
+                font-size: 2rem;
+            }
+            
+            #value-prop .icons,
+            .persona-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            #input-section .form-container {
+                padding: 2rem;
+            }
+        }
+
+        /* Add new styles for persona images */
+        .persona-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .persona-card:hover .persona-image {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .upcoming-card i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .hero-cta {
+            margin-bottom: 3rem;
+        }
+
+        .microcopy {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 0.5rem;
+        }
+
+        .value-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .value-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+            text-align: center;
+            min-width: 380px;
+        }
+
+        .value-card h3 {
+            color: #ED64A6;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            line-height: 1.3;
+        }
+
+        .value-card p {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .value-card .highlight {
+            background: rgba(237, 100, 166, 0.1);
+            padding: 1.2rem;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            border-left: 3px solid #ED64A6;
+            text-align: left;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 1.5rem 0;
+        }
+
+        .feature-list li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-list i {
+            color: #ED64A6;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .timeline {
+            margin: 1.5rem 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .time {
+            color: #ED64A6;
+            font-weight: bold;
+            min-width: 60px;
+        }
+
+        @media (max-width: 1400px) {
+            .value-grid {
+                grid-template-columns: 1fr;
+                align-items: center;
+            }
+            
+            .value-card {
+                min-width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+        }
+
+        /* Footer styles */
+        footer {
+            background: linear-gradient(135deg, #1a1f35, #2d3748);
+            color: #fff;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        footer .social-links {
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        footer .social-links a {
+            color: #fff;
+            font-size: 1.5rem;
+            margin: 0 1rem;
+            transition: color 0.3s;
+        }
+
+        footer .social-links a:hover {
+            color: #ED64A6;
+        }
+
+        footer p {
+            position: relative;
+            z-index: 1;
+            color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-robot"></i>
+            Agent Lens
+        </div>
+        <div class="cta-buttons">
+            <a href="#input-section">Subscribe</a>
+            <a href="https://github.com/your-team" target="_blank">GitHub</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="floating-elements">
+            <!-- Generated floating elements will be added here by JavaScript -->
+        </div>
+        <h1>Transform Product Development with AI Personas That Think, Act, and Evolve Like Your Users</h1>
+        <p>Test concepts, validate features, and optimize products in real-time using dynamic personas powered by behavioral AI and guided by UX experts.</p>
+        <div class="hero-cta">
+            <button class="btn-primary" onclick="subscribe()">Subscribe to Learn More</button>
+            <p class="microcopy">Be the first to experience the future of product testing</p>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-container">
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <i class="fas fa-brain fa-3x"></i>
+                        <h3>Behavioral AI</h3>
+                        <p>Dynamic personas that learn and adapt like real users</p>
+                    </div>
+                    <div class="demo-card">
+                        <i class="fas fa-chart-line fa-3x"></i>
+                        <h3>Real-Time Testing</h3>
+                        <p>24/7 continuous product validation</p>
+                    </div>
+                    <div class="demo-card">
+                        <i class="fas fa-user-tie fa-3x"></i>
+                        <h3>Expert Guidance</h3>
+                        <p>UX veterans interpreting every insight</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Value Proposition Section -->
+    <section id="value-prop">
+        <h2>Why Agent Lens?</h2>
+        <div class="value-grid">
+            <div class="value-card">
+                <h3>AI-Powered Personas</h3>
+                <p>Dynamic personas that learn and adapt like real users, providing authentic behavioral insights.</p>
+                <p class="highlight">Simulate real user behavior 24/7 with AI that evolves and adapts.</p>
+            </div>
+
+            <div class="value-card">
+                <h3>Expert-Led Analysis</h3>
+                <p>Every insight is interpreted by veteran UX researchers, ensuring actionable recommendations.</p>
+                <p class="highlight">Get expert-level analysis without the traditional research timeline.</p>
+            </div>
+
+            <div class="value-card">
+                <h3>Continuous Optimization</h3>
+                <p>Real-time feedback and automated improvements keep your product evolving.</p>
+                <p class="highlight">Iterate 10x faster than traditional A/B testing methods.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Input Form, Persona Selection & Subscription Section -->
+    <section id="input-section">
+        <div class="form-container">
+            <h2>Evaluate Your Product</h2>
+            <form>
+                <label for="website-url">Product URL</label>
+                <input type="text" id="website-url" placeholder="https://www.example.com" required>
+                
+                <label for="website-type">Product Type</label>
+                <select id="website-type">
+                    <option value="ecommerce">Ecommerce</option>
+                    <option value="blog">Blog</option>
+                    <option value="landing">Landing Page</option>
+                    <option value="mobile-app">Mobile App</option>
+                </select>
+                
+                <label for="key-questions">Key Questions (optional)</label>
+                <textarea id="key-questions" placeholder="Enter any specific questions you have"></textarea>
+            </form>
+            
+            <!-- Persona Selection -->
+            <div class="persona-container">
+                <h3>Select Your Targeted Persona</h3>
+                <div class="persona-cards">
+                    <!-- Persona Card 1 -->
+                    <div class="persona-card" onclick="togglePersona(this)">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&auto=format&q=80" alt="Alex" class="persona-image">
+                        <div class="persona-name">Alex, 25</div>
+                        <div class="persona-desc">Tech-Savvy Male</div>
+                        <div class="clip-animation">
+                            Quick, efficient, prefers modern UI. Always on the go and values time-saving features.
+                        </div>
+                    </div>
+                    <!-- Persona Card 2 -->
+                    <div class="persona-card" onclick="togglePersona(this)">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&auto=format&q=80" alt="Maria" class="persona-image">
+                        <div class="persona-name">Maria, 60</div>
+                        <div class="persona-desc">Retired Female</div>
+                        <div class="clip-animation">
+                            Prefers simplicity and clear navigation. Values accessibility and readability.
+                        </div>
+                    </div>
+                    <!-- Persona Card 3 -->
+                    <div class="persona-card" onclick="togglePersona(this)">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&auto=format&q=80" alt="John" class="persona-image">
+                        <div class="persona-name">John, 35</div>
+                        <div class="persona-desc">Professional Male</div>
+                        <div class="clip-animation">
+                            Seeks detailed product information. Values reliability and thorough research.
+                        </div>
+                    </div>
+                    <!-- Persona Card 4 -->
+                    <div class="persona-card" onclick="togglePersona(this)">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&auto=format&q=80" alt="Sophia" class="persona-image">
+                        <div class="persona-name">Sophia, 22</div>
+                        <div class="persona-desc">Student Female</div>
+                        <div class="clip-animation">
+                            Trend-focused early adopter. Values social proof and modern design.
+                        </div>
+                    </div>
+                    <!-- Teaser Card -->
+                    <div class="persona-card upcoming-card">
+                        <i class="fas fa-users"></i>
+                        <div>+100 Upcoming Personas</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Subscription/Notify Me -->
+            <div class="subscription">
+                <p>Simulation in Production – Stay Tuned!</p>
+                <button onclick="subscribe()">Notify Me</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="social-links">
+            <a href="https://linkedin.com/in/YOUR-LINKEDIN-USERNAME" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <a href="https://github.com/YOUR-GITHUB-USERNAME" target="_blank"><i class="fab fa-github"></i></a>
+        </div>
+        <p>&copy; 2025 Agent Lens</p>
+    </footer>
+
+    <script>
+        // Create floating elements
+        function createFloatingElements() {
+            const container = document.querySelector('.floating-elements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.width = Math.random() * 100 + 50 + 'px';
+                element.style.height = element.style.width;
+                element.style.left = Math.random() * 100 + '%';
+                element.style.top = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Initialize floating elements
+        createFloatingElements();
+
+        // Smooth scrolling function
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Toggle clip animation for persona cards
+        function togglePersona(card) {
+            card.classList.toggle('active');
+        }
+
+        // Enhanced subscribe function with form validation
+        function subscribe() {
+            const email = prompt("Please enter your email to stay updated");
+            if (email) {
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailRegex.test(email)) {
+                    // Here you would typically send this to your backend
+                    // For now, we'll just show a message
+                    alert("Thank you for subscribing! We'll keep you updated on our progress.");
+                } else {
+                    alert("Please enter a valid email address.");
+                }
+            }
+        }
+
+        // Add parallax effect to floating elements
+        document.addEventListener('mousemove', (e) => {
+            const elements = document.querySelectorAll('.floating-element');
+            const mouseX = e.clientX / window.innerWidth;
+            const mouseY = e.clientY / window.innerHeight;
+
+            elements.forEach(element => {
+                const speed = 0.5;
+                const x = (mouseX - 0.5) * speed * 100;
+                const y = (mouseY - 0.5) * speed * 100;
+                element.style.transform = `translate(${x}px, ${y}px)`;
+            });
+        });
+    </script>
+</body>
+</html> 
