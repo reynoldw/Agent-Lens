@@ -260,21 +260,24 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.1);
             width: 100%;
+            overflow: hidden; /* Prevent content from overflowing */
         }
 
         .demo-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-top: 1rem;
+            width: 100%;
         }
 
         .demo-card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
-            padding: 2rem 1.75rem;
+            padding: 2rem 1.5rem;
             transition: all 0.3s;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
         }
 
         .demo-card:hover {
@@ -804,6 +807,14 @@
             .agents-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+            
+            .demo-container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .demo-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
         }
         
         @media (max-width: 768px) {
@@ -826,11 +837,23 @@
             .demo-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .demo-container {
+                padding: 1.5rem 1rem;
+            }
+            
+            .demo-card {
+                padding: 1.5rem 1rem;
+            }
         }
         
         @media (max-width: 576px) {
             .agents-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .demo-section {
+                margin-top: 3rem;
             }
         }
     </style>
@@ -841,9 +864,6 @@
         <div class="logo">
             <i class="fas fa-robot"></i>
             Agent Lens
-        </div>
-        <div class="cta-buttons">
-            <a href="https://github.com/reynoldw/Agent-Lens" target="_blank">GitHub</a>
         </div>
     </header>
 
@@ -860,22 +880,22 @@
         </div>
         
         <div class="demo-section">
-            <div class="demo-container" style="max-width: 1400px;">
-                <div class="demo-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); max-width: 1400px; margin: 0 auto; gap: 1.5rem;">
-                    <div class="demo-card" style="padding: 2rem 1.75rem;">
+            <div class="demo-container">
+                <div class="demo-grid">
+                    <div class="demo-card">
                         <i class="fas fa-brain fa-3x"></i>
                         <h3>Behavioral AI</h3>
-                        <p style="min-height: 40px;">Dynamic personas that learn and adapt everyday</p>
+                        <p>Dynamic personas that learn and adapt everyday</p>
                     </div>
-                    <div class="demo-card" style="padding: 2rem 1.75rem;">
+                    <div class="demo-card">
                         <i class="fas fa-chart-line fa-3x"></i>
                         <h3>Real-Time Testing</h3>
-                        <p style="min-height: 40px;">24/7 continuous product validation</p>
+                        <p>24/7 continuous product validation</p>
                     </div>
-                    <div class="demo-card" style="padding: 2rem 1.75rem;">
+                    <div class="demo-card">
                         <i class="fas fa-user-tie fa-3x"></i>
                         <h3>Expert Guidance</h3>
-                        <p style="min-height: 40px;">UX veterans interpreting every insight</p>
+                        <p>UX veterans interpreting every insight</p>
                     </div>
                 </div>
             </div>
