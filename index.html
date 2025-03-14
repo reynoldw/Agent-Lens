@@ -24,6 +24,95 @@
             color: inherit;
         }
 
+        /* Common Styles */
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1f35, #2d3748);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .z-index-1 {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Button Styles */
+        .btn {
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            border-radius: 50px;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #ED64A6, #D53F8C);
+            color: #fff;
+            padding: 1.2rem 2.5rem;
+            border: none;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(237, 100, 166, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(237, 100, 166, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
         /* Header */
         header {
             background: rgba(26, 31, 53, 0.95);
@@ -87,26 +176,6 @@
             align-items: center;
         }
 
-        /* Animated Background */
-        #hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
-            animation: gradientShift 15s ease infinite;
-        }
-
-        @keyframes gradientShift {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
         /* Floating Elements */
         .floating-elements {
             position: absolute;
@@ -159,46 +228,26 @@
             color: rgba(255, 255, 255, 0.9);
         }
 
-        #hero .btn-primary {
-            background: linear-gradient(45deg, #ED64A6, #D53F8C);
-            color: #fff;
-            padding: 1.2rem 2.5rem;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.2rem;
-            cursor: pointer;
+        /* Card Styles */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
             transition: all 0.3s;
-            position: relative;
-            z-index: 1;
-            box-shadow: 0 4px 15px rgba(237, 100, 166, 0.3);
-            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        #hero .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: 0.5s;
-        }
-
-        #hero .btn-primary:hover::before {
-            left: 100%;
-        }
-
-        #hero .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(237, 100, 166, 0.4);
-        }
-
-        /* Interactive Demo Section */
+        /* Demo Section */
         .demo-section {
             margin-top: 4rem;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1400px;
             position: relative;
             z-index: 1;
         }
@@ -207,22 +256,23 @@
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 2rem;
+            padding: 2.5rem;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
         }
 
         .demo-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
         }
 
         .demo-card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
-            padding: 1.5rem;
+            padding: 2rem 1.75rem;
             transition: all 0.3s;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -234,75 +284,33 @@
         }
 
         .demo-card i {
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
             color: #ED64A6;
         }
 
         .demo-card h3 {
             color: #fff;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.3rem;
         }
 
         .demo-card p {
             color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                padding: 1rem;
-            }
-            header nav {
-                margin: 1rem 0;
-            }
-            header .cta-buttons {
-                margin-top: 1rem;
-            }
-            #hero h1 {
-                font-size: 2.5rem;
-            }
-            #hero p {
-                font-size: 1.1rem;
-            }
-            .demo-grid {
-                grid-template-columns: 1fr;
-            }
+            font-size: 1rem;
+            line-height: 1.5;
+            min-height: 40px;
         }
 
         /* Value Proposition Section */
         #value-prop {
             padding: 6rem 2rem;
-            background: linear-gradient(135deg, #1a1f35, #2d3748);
-            color: #fff;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #value-prop::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
-            animation: gradientShift 15s ease infinite;
         }
 
         #value-prop h2 {
             font-size: 2.8rem;
             margin-bottom: 2rem;
             text-align: center;
-            position: relative;
-            z-index: 1;
-            background: linear-gradient(45deg, #fff, #f0f0f0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         #value-prop p {
@@ -310,99 +318,62 @@
             max-width: 800px;
             margin: 0 auto 4rem;
             text-align: center;
-            position: relative;
-            z-index: 1;
             color: rgba(255, 255, 255, 0.9);
             line-height: 1.8;
         }
 
-        #value-prop .icons {
+        .value-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            position: relative;
-            z-index: 1;
+            padding: 0 2rem;
         }
 
-        #value-prop .icon-card {
+        .value-card {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s;
+            padding: 2.5rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        #value-prop .icon-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: 0.5s;
-        }
-
-        #value-prop .icon-card:hover::before {
-            left: 100%;
-        }
-
-        #value-prop .icon-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        #value-prop .icon-card i {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            color: #ED64A6;
             transition: all 0.3s;
+            text-align: center;
+            min-width: 380px;
         }
 
-        #value-prop .icon-card:hover i {
-            transform: scale(1.1);
-            color: #D53F8C;
-        }
-
-        #value-prop .icon-card h3 {
+        .value-card h3 {
+            color: #ED64A6;
+            margin-bottom: 1.5rem;
             font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #fff;
+            line-height: 1.3;
         }
 
-        #value-prop .icon-card p {
-            font-size: 1rem;
-            margin: 0;
-            color: rgba(255, 255, 255, 0.8);
+        .value-card p {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .value-card .highlight {
+            background: rgba(237, 100, 166, 0.1);
+            padding: 1.2rem;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            border-left: 3px solid #ED64A6;
+            text-align: left;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Input Section */
         #input-section {
             padding: 6rem 2rem;
-            background: linear-gradient(135deg, #2d3748, #1a1f35);
-            position: relative;
-            overflow: hidden;
-        }
-
-        #input-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
-            animation: gradientShift 15s ease infinite;
         }
 
         #input-section .form-container {
@@ -423,27 +394,25 @@
             margin-bottom: 2rem;
             text-align: center;
             color: #fff;
-            background: linear-gradient(45deg, #fff, #f0f0f0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        #input-section form {
+        /* Form Styles */
+        .form-common {
             display: grid;
             gap: 1.5rem;
-            margin-bottom: 3rem;
         }
-
-        #input-section label {
+        
+        .form-label {
             color: #fff;
             font-size: 1.1rem;
             margin-bottom: 0.5rem;
             display: block;
+            font-weight: 500;
         }
-
-        #input-section input[type=text],
-        #input-section select,
-        #input-section textarea {
+        
+        .form-control {
             width: 100%;
             padding: 1rem;
             background: rgba(255, 255, 255, 0.1);
@@ -453,26 +422,32 @@
             font-size: 1rem;
             transition: all 0.3s;
         }
-
-        #input-section input[type=text]:focus,
-        #input-section select:focus,
-        #input-section textarea:focus {
+        
+        .form-control:focus {
             outline: none;
             border-color: #ED64A6;
             background: rgba(255, 255, 255, 0.15);
             box-shadow: 0 0 0 2px rgba(237, 100, 166, 0.2);
         }
-
-        #input-section textarea {
+        
+        textarea.form-control {
             min-height: 120px;
             resize: vertical;
         }
-
-        #input-section .persona-container {
-            margin-top: 3rem;
+        
+        select.form-control option {
+            background: #1a1f35;
+            color: #fff;
+            padding: 0.5rem;
         }
 
-        #input-section .persona-container h3 {
+        /* Persona Cards */
+        .persona-container {
+            margin-top: 0;
+            margin-bottom: 4rem;
+        }
+
+        .persona-container h3 {
             font-size: 1.8rem;
             margin-bottom: 2rem;
             text-align: center;
@@ -551,51 +526,85 @@
             border-color: rgba(255, 255, 255, 0.2);
         }
 
-        #input-section .subscription {
+        /* Subscription */
+        .subscription {
             text-align: center;
             margin-top: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        #input-section .subscription p {
+        .subscription p {
             font-size: 1.2rem;
             color: #fff;
             margin-bottom: 1.5rem;
+            font-weight: 500;
         }
 
-        #input-section .subscription button {
-            background: linear-gradient(45deg, #ED64A6, #D53F8C);
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1f35, #2d3748);
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h3 {
             color: #fff;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: rgba(255, 255, 255, 0.6);
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(237, 100, 166, 0.3);
+            font-size: 1.5rem;
+            transition: color 0.3s;
         }
 
-        #input-section .subscription button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(237, 100, 166, 0.4);
+        .close-modal:hover {
+            color: #fff;
         }
 
-        @media (max-width: 768px) {
-            #value-prop h2,
-            #input-section h2 {
-                font-size: 2rem;
-            }
-            
-            #value-prop .icons,
-            .persona-cards {
-                grid-template-columns: 1fr;
-            }
-            
-            #input-section .form-container {
-                padding: 2rem;
-            }
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
         }
 
-        /* Add new styles for persona images */
+        .success-message {
+            color: #4CAF50;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        /* Persona Images */
         .persona-image {
             width: 80px;
             height: 80px;
@@ -611,12 +620,6 @@
             border-color: rgba(255, 255, 255, 0.4);
         }
 
-        .upcoming-card i {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
         .hero-cta {
             margin-bottom: 3rem;
         }
@@ -627,142 +630,133 @@
             margin-top: 0.5rem;
         }
 
-        .value-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
+        /* Agents Section */
+        #agents-section {
+            padding: 6rem 2rem;
         }
 
-        .value-card {
+        #agents-section .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        #agents-section h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        #agents-section .subtitle {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        /* Teaser Card */
+        .teaser-card {
+            background: rgba(237, 100, 166, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+            border: 1px solid rgba(237, 100, 166, 0.2);
+            transition: all 0.3s;
+            height: 100%;
+        }
+
+        .teaser-card:hover {
+            background: rgba(237, 100, 166, 0.1);
+            transform: translateY(-5px);
+            border-color: rgba(237, 100, 166, 0.3);
+        }
+
+        .teaser-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .teaser-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(237, 100, 166, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            border: 2px solid rgba(237, 100, 166, 0.2);
+            transition: all 0.3s;
+        }
+
+        .teaser-card:hover .teaser-icon {
+            transform: scale(1.1);
+            background: rgba(237, 100, 166, 0.2);
+        }
+
+        .teaser-icon i {
+            font-size: 2.5rem;
+            color: rgba(237, 100, 166, 0.8);
+        }
+
+        .teaser-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 0;
+        }
+
+        .teaser-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Early Access Section */
+        .early-access {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 2.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s;
+            padding: 3rem;
             text-align: center;
-            min-width: 380px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        .value-card h3 {
-            color: #ED64A6;
+        .early-access h3 {
+            font-size: 2rem;
+            color: #fff;
             margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-            line-height: 1.3;
         }
 
-        .value-card p {
+        .early-access p {
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 1.5rem;
             font-size: 1.1rem;
+            margin-bottom: 2rem;
             line-height: 1.6;
-            max-width: 320px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
-        .value-card .highlight {
-            background: rgba(237, 100, 166, 0.1);
-            padding: 1.2rem;
-            border-radius: 10px;
-            margin-top: 1.5rem;
-            border-left: 3px solid #ED64A6;
-            text-align: left;
-            max-width: 320px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .feature-list {
-            list-style: none;
-            margin: 1.5rem 0;
-        }
-
-        .feature-list li {
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .feature-list i {
-            color: #ED64A6;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 0.8rem 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            margin-top: 1rem;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .timeline {
-            margin: 1.5rem 0;
-        }
-
-        .timeline-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            padding: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-        }
-
-        .time {
-            color: #ED64A6;
-            font-weight: bold;
-            min-width: 60px;
-        }
-
-        @media (max-width: 1400px) {
-            .value-grid {
-                grid-template-columns: 1fr;
-                align-items: center;
-            }
-            
-            .value-card {
-                min-width: 100%;
-                max-width: 600px;
-                margin: 0 auto;
-            }
-        }
-
-        /* Footer styles */
+        /* Footer */
         footer {
-            background: linear-gradient(135deg, #1a1f35, #2d3748);
-            color: #fff;
             padding: 2rem;
             text-align: center;
             position: relative;
             overflow: hidden;
-        }
-
-        footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(237, 100, 166, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(90, 103, 216, 0.1) 0%, transparent 50%);
-            animation: gradientShift 15s ease infinite;
         }
 
         footer .social-links {
@@ -787,6 +781,58 @@
             z-index: 1;
             color: rgba(255, 255, 255, 0.8);
         }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .value-grid {
+                grid-template-columns: 1fr;
+                align-items: center;
+            }
+            
+            .value-card {
+                min-width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .agents-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .agents-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            header nav {
+                margin: 1rem 0;
+            }
+            header .cta-buttons {
+                margin-top: 1rem;
+            }
+            #hero h1 {
+                font-size: 2.5rem;
+            }
+            #hero p {
+                font-size: 1.1rem;
+            }
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -797,40 +843,39 @@
             Agent Lens
         </div>
         <div class="cta-buttons">
-            <a href="#input-section">Subscribe</a>
             <a href="https://github.com/reynoldw/Agent-Lens" target="_blank">GitHub</a>
         </div>
     </header>
 
     <!-- Hero Section -->
-    <section id="hero">
+    <section id="hero" class="gradient-bg">
         <div class="floating-elements">
             <!-- Generated floating elements will be added here by JavaScript -->
         </div>
-        <h1>Transform Product Development with AI Personas That Think, Act, and Evolve Like Your Users</h1>
-        <p>Test concepts, validate features, and optimize products in real-time using dynamic personas powered by behavioral AI and guided by UX experts.</p>
+        <h1 class="z-index-1">Transform Product Development with AI Personas That Think, Act, and Evolve Like Your Users</h1>
+        <p class="z-index-1">Test concepts, validate features, and optimize products in real-time using dynamic personas powered by behavioral AI and guided by UX experts.</p>
         <div class="hero-cta">
-            <button class="btn-primary" onclick="subscribe()">Subscribe to Learn More</button>
+            <button class="btn btn-primary" onclick="scrollToSection('early-access-section')">Subscribe to Learn More</button>
             <p class="microcopy">Be the first to experience the future of product testing</p>
         </div>
         
         <div class="demo-section">
-            <div class="demo-container">
-                <div class="demo-grid">
-                    <div class="demo-card">
+            <div class="demo-container" style="max-width: 1400px;">
+                <div class="demo-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); max-width: 1400px; margin: 0 auto; gap: 1.5rem;">
+                    <div class="demo-card" style="padding: 2rem 1.75rem;">
                         <i class="fas fa-brain fa-3x"></i>
                         <h3>Behavioral AI</h3>
-                        <p>Dynamic personas that learn and adapt like real users</p>
+                        <p style="min-height: 40px;">Dynamic personas that learn and adapt everyday</p>
                     </div>
-                    <div class="demo-card">
+                    <div class="demo-card" style="padding: 2rem 1.75rem;">
                         <i class="fas fa-chart-line fa-3x"></i>
                         <h3>Real-Time Testing</h3>
-                        <p>24/7 continuous product validation</p>
+                        <p style="min-height: 40px;">24/7 continuous product validation</p>
                     </div>
-                    <div class="demo-card">
+                    <div class="demo-card" style="padding: 2rem 1.75rem;">
                         <i class="fas fa-user-tie fa-3x"></i>
                         <h3>Expert Guidance</h3>
-                        <p>UX veterans interpreting every insight</p>
+                        <p style="min-height: 40px;">UX veterans interpreting every insight</p>
                     </div>
                 </div>
             </div>
@@ -838,8 +883,8 @@
     </section>
 
     <!-- Value Proposition Section -->
-    <section id="value-prop">
-        <h2>Why Agent Lens?</h2>
+    <section id="value-prop" class="gradient-bg">
+        <h2 class="gradient-text z-index-1">Why Agent Lens?</h2>
         <div class="value-grid">
             <div class="value-card">
                 <h3>AI-Powered Personas</h3>
@@ -861,84 +906,128 @@
         </div>
     </section>
 
-    <!-- Input Form, Persona Selection & Subscription Section -->
-    <section id="input-section">
-        <div class="form-container">
-            <h2>Evaluate Your Product</h2>
-            <form>
-                <label for="website-url">Product URL</label>
-                <input type="text" id="website-url" placeholder="https://www.example.com" required>
-                
-                <label for="website-type">Product Type</label>
-                <select id="website-type">
-                    <option value="ecommerce">Ecommerce</option>
-                    <option value="blog">Blog</option>
-                    <option value="landing">Landing Page</option>
-                    <option value="mobile-app">Mobile App</option>
-                </select>
-                
-                <label for="key-questions">Key Questions (optional)</label>
-                <textarea id="key-questions" placeholder="Enter any specific questions you have"></textarea>
-            </form>
+    <!-- After Value Proposition Section and before Input Section -->
+    <section id="agents-section" class="gradient-bg">
+        <div class="section-container">
+            <h2 class="gradient-text z-index-1">Meet Our Agents</h2>
+            <p class="subtitle z-index-1">Meet the dynamic minds behind AgentHub: AI-powered personas engineered to mirror real-world users, delivering authentic insights by evolving their behaviors and emotions daily.</p>
             
-            <!-- Persona Selection -->
-            <div class="persona-container">
-                <h3>Select Your Targeted Persona</h3>
-                <div class="persona-cards">
-                    <!-- Persona Card 1 -->
-                    <div class="persona-card" onclick="togglePersona(this)">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&auto=format&q=80" alt="Alex" class="persona-image">
-                        <div class="persona-name">Alex, 25</div>
-                        <div class="persona-desc">Tech-Savvy Male</div>
-                        <div class="clip-animation">
-                            Quick, efficient, prefers modern UI. Always on the go and values time-saving features.
-                        </div>
+            <div class="agents-grid">
+                <!-- Agent Card 1 -->
+                <div class="persona-card" onclick="togglePersona(this)">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&auto=format&q=80" alt="Alex" class="persona-image">
+                    <div class="persona-name">Alex, 25</div>
+                    <div class="persona-desc">Tech-Savvy Product Manager</div>
+                    <div class="clip-animation">
+                        Always on the go and values time-saving features. Uses multiple devices and expects seamless experiences across platforms. Focuses on metrics and efficiency in both his work and personal tools.
                     </div>
-                    <!-- Persona Card 2 -->
-                    <div class="persona-card" onclick="togglePersona(this)">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&auto=format&q=80" alt="Maria" class="persona-image">
-                        <div class="persona-name">Maria, 60</div>
-                        <div class="persona-desc">Retired Female</div>
-                        <div class="clip-animation">
-                            Prefers simplicity and clear navigation. Values accessibility and readability.
-                        </div>
+                </div>
+                <!-- Agent Card 2 -->
+                <div class="persona-card" onclick="togglePersona(this)">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&auto=format&q=80" alt="Maria" class="persona-image">
+                    <div class="persona-name">Maria, 35</div>
+                    <div class="persona-desc">Marketing Specialist & Mom</div>
+                    <div class="clip-animation">
+                        Values clean design and intuitive navigation. Has limited time to browse and needs information quickly. Primarily uses mobile devices and expects responsive, family-friendly experiences.
                     </div>
-                    <!-- Persona Card 3 -->
-                    <div class="persona-card" onclick="togglePersona(this)">
-                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&auto=format&q=80" alt="John" class="persona-image">
-                        <div class="persona-name">John, 35</div>
-                        <div class="persona-desc">Professional Male</div>
-                        <div class="clip-animation">
-                            Seeks detailed product information. Values reliability and thorough research.
-                        </div>
+                </div>
+                <!-- Agent Card 3 -->
+                <div class="persona-card" onclick="togglePersona(this)">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&auto=format&q=80" alt="John" class="persona-image">
+                    <div class="persona-name">John, 60</div>
+                    <div class="persona-desc">Financial Analyst & Decision Maker</div>
+                    <div class="clip-animation">
+                        Research-driven and methodical. Compares multiple options before committing. Values transparency and comprehensive information. Will deep-dive into documentation and FAQs before purchasing.
                     </div>
-                    <!-- Persona Card 4 -->
-                    <div class="persona-card" onclick="togglePersona(this)">
-                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&auto=format&q=80" alt="Sophia" class="persona-image">
-                        <div class="persona-name">Sophia, 22</div>
-                        <div class="persona-desc">Student Female</div>
-                        <div class="clip-animation">
-                            Trend-focused early adopter. Values social proof and modern design.
-                        </div>
+                </div>
+                <!-- Agent Card 4 -->
+                <div class="persona-card" onclick="togglePersona(this)">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&auto=format&q=80" alt="Sophia" class="persona-image">
+                    <div class="persona-name">Sophia, 22</div>
+                    <div class="persona-desc">Design Student & Social Creator</div>
+                    <div class="clip-animation">
+                        Trend-conscious and visually-driven. Shares experiences on social media. Prefers intuitive interfaces with modern aesthetics. Quick to adopt new platforms but also quick to abandon them.
                     </div>
-                    <!-- Teaser Card -->
-                    <div class="persona-card upcoming-card">
-                        <i class="fas fa-users"></i>
-                        <div>+100 Upcoming Personas</div>
+                </div>
+                <!-- Teaser Card - Improved Design -->
+                <div class="persona-card teaser-card">
+                    <div class="teaser-content">
+                        <div class="teaser-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="teaser-title">More Personas Coming Soon</div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Subscription/Notify Me -->
-            <div class="subscription">
-                <p>Simulation in Production – Stay Tuned!</p>
-                <button onclick="subscribe()">Notify Me</button>
+        </div>
+    </section>
+
+    <!-- Modal for simple subscription -->
+    <div class="modal" id="subscribeModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3>Stay Updated</h3>
+            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1rem;">Enter your email to receive updates about Agent Lens.</p>
+            <form id="subscribeForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfefc-YROq6gyk7ldCxi_ySzyOcy4ExLiDR4Fq_pLbN4QjkqA/formResponse" method="POST" target="_blank">
+                <input type="hidden" name="entry.1838383903" value="Subscribe">
+                <input type="email" name="entry.437032823" id="emailInput" placeholder="Enter your email address" required class="form-control">
+                <div class="error-message" id="errorMessage">Please enter a valid email address.</div>
+                <div class="success-message" id="successMessage">Thank you for subscribing!</div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; border-radius: 10px;">Subscribe</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Early Access Section -->
+    <section id="early-access-section" class="gradient-bg" style="padding: 6rem 2rem;">
+        <div class="section-container z-index-1" style="max-width: 1200px; margin: 0 auto;">
+            <div class="early-access">
+                <h3>Be Among the First to Experience</h3>
+                <p>Join our exclusive early access program and revolutionize your product testing with AI-powered user insights. Limited spots available for pioneering companies ready to transform their user research.</p>
+                
+                <form id="earlyAccessForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfefc-YROq6gyk7ldCxi_ySzyOcy4ExLiDR4Fq_pLbN4QjkqA/formResponse" method="POST" target="_blank" style="margin-top: 2rem; text-align: left;" class="form-common">
+                    <input type="hidden" name="entry.1838383903" value="Early Access">
+                    
+                    <div>
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" name="entry.1329939338" id="name" placeholder="Enter your full name" required class="form-control">
+                    </div>
+                    
+                    <div>
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" name="entry.437032823" id="email" placeholder="Enter your email address" required class="form-control">
+                    </div>
+                    
+                    <div>
+                        <label for="website-url" class="form-label">Product URL</label>
+                        <input type="text" name="entry.148073607" id="website-url" placeholder="https://www.example.com" required class="form-control">
+                    </div>
+                    
+                    <div>
+                        <label for="website-type" class="form-label">Product Type</label>
+                        <select name="entry.1580963489" id="website-type" required class="form-control">
+                            <option value="E-Commerce">E-Commerce</option>
+                            <option value="Financial Services">Financial Services</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Enterprise SaaS">Enterprise SaaS</option>
+                            <option value="Gaming & Entertainment">Gaming & Entertainment</option>
+                            <option value="Automotive">Automotive</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="key-questions" class="form-label">Key Questions (optional)</label>
+                        <textarea name="entry.1614507410" id="key-questions" placeholder="Enter any specific questions you have" class="form-control"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 2rem;">Get Early Access</button>
+                </form>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer id="footer">
+    <footer id="footer" class="gradient-bg">
         <div class="social-links">
             <a href="https://www.linkedin.com/in/reynoldwu" target="_blank"><i class="fab fa-linkedin"></i></a>
             <a href="https://github.com/reynoldw/Agent-Lens" target="_blank"><i class="fab fa-github"></i></a>
@@ -947,9 +1036,15 @@
     </footer>
 
     <script>
-        // Create floating elements
+        // Cached DOM elements for better performance
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        
+        // Create floating elements for hero background
         function createFloatingElements() {
             const container = document.querySelector('.floating-elements');
+            const fragment = document.createDocumentFragment(); // Use document fragment for better performance
+            
             for (let i = 0; i < 20; i++) {
                 const element = document.createElement('div');
                 element.className = 'floating-element';
@@ -958,12 +1053,14 @@
                 element.style.left = Math.random() * 100 + '%';
                 element.style.top = Math.random() * 100 + '%';
                 element.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(element);
+                fragment.appendChild(element);
             }
+            
+            container.appendChild(fragment); // Add all elements at once
         }
 
         // Initialize floating elements
-        createFloatingElements();
+        document.addEventListener('DOMContentLoaded', createFloatingElements);
 
         // Smooth scrolling function
         function scrollToSection(id) {
@@ -975,34 +1072,79 @@
             card.classList.toggle('active');
         }
 
-        // Enhanced subscribe function with form validation
-        function subscribe() {
-            const email = prompt("Please enter your email to stay updated");
-            if (email) {
-                // Basic email validation
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (emailRegex.test(email)) {
-                    // Here you would typically send this to your backend
-                    // For now, we'll just show a message
-                    alert("Thank you for subscribing! We'll keep you updated on our progress.");
-                } else {
-                    alert("Please enter a valid email address.");
-                }
-            }
+        // Modal handling for subscription - keeping this for future modal functionality
+        const modal = document.getElementById('subscribeModal');
+        
+        function closeModal() {
+            if (modal) modal.style.display = 'none';
         }
 
-        // Add parallax effect to floating elements
-        document.addEventListener('mousemove', (e) => {
-            const elements = document.querySelectorAll('.floating-element');
-            const mouseX = e.clientX / window.innerWidth;
-            const mouseY = e.clientY / window.innerHeight;
-
-            elements.forEach(element => {
-                const speed = 0.5;
-                const x = (mouseX - 0.5) * speed * 100;
-                const y = (mouseY - 0.5) * speed * 100;
-                element.style.transform = `translate(${x}px, ${y}px)`;
+        // Close modal when clicking outside
+        if (modal) {
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
             });
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Add parallax effect to floating elements with debouncing
+        let ticking = false;
+        document.addEventListener('mousemove', (e) => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const elements = document.querySelectorAll('.floating-element');
+                    const mouseX = e.clientX / window.innerWidth;
+                    const mouseY = e.clientY / window.innerHeight;
+                    const speed = 0.5;
+                    const x = (mouseX - 0.5) * speed * 100;
+                    const y = (mouseY - 0.5) * speed * 100;
+                    
+                    elements.forEach(element => {
+                        element.style.transform = `translate(${x}px, ${y}px)`;
+                    });
+                    
+                    ticking = false;
+                });
+                
+                ticking = true;
+            }
+        });
+
+        // Form validation
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(String(email).toLowerCase());
+        }
+        
+        // Handle form submissions
+        document.getElementById('subscribeForm')?.addEventListener('submit', function(e) {
+            const email = document.getElementById('emailInput').value;
+            if (!validateEmail(email)) {
+                e.preventDefault();
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            } else {
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'block';
+                // Form will submit normally
+            }
+        });
+        
+        document.getElementById('earlyAccessForm')?.addEventListener('submit', function(e) {
+            const email = document.getElementById('email').value;
+            if (!validateEmail(email)) {
+                e.preventDefault();
+                alert('Please enter a valid email address');
+            }
+            // Form will submit normally if validation passes
         });
     </script>
 </body>
